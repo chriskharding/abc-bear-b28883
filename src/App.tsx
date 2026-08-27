@@ -568,8 +568,15 @@ function DoneScreen({
     <div className="screen screen--done">
       <div className="stars">⭐️⭐️⭐️</div>
       <Bear mood={bearMood} size={180} />
+      {/* Once the game starts, the headline IS the math problem - the words-
+          read tally only fronts the scene before the bear speaks. The
+          equation completes itself when he solves it. */}
       <h2 className="title title--sm">
-        You read {words} {words === 1 ? 'word' : 'words'}!
+        {stage !== 'offer' && game.kind === 'takeaway'
+          ? `${game.start} − ${game.remove}${stage === 'full' || stage === 'again' ? ` = ${answer}` : ''}`
+        : stage !== 'offer' && game.kind === 'addition'
+          ? `${game.a} + ${game.b} = ${stage === 'full' || stage === 'again' ? answer : '?'}`
+          : `You read ${words} ${words === 1 ? 'word' : 'words'}!`}
       </h2>
       <p className="prompt">{promptText}</p>
 

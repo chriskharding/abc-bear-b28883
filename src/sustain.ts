@@ -45,11 +45,20 @@ const MIN_SOUND_S = 0.32;
 const FADE_S = 0.03;
 
 let currentUntil = 0;         // earliest time the current sound may be replaced
-let pending: { id: string; hold: boolean } | null = null;
+/** Every letter crossed but not yet sounded, in order. A fast swipe pushes
+ *  s-i-p faster than they can play; each still gets its full moment. */
+let queue: { id: string; hold: boolean }[] = [];
 let pendingTimer: number | null = null;
 let lifted = false;           // finger is up - stop after the queue drains
 
-function playNow(buf: AudioBuffer, hold: boolean) {
+/** For tests and debugging: every phoneme that actually made sound, in order.
+ *  Mirrored onto window so it's readable regardless of module instancing. */
+export const played: string[] = [];
+declare global { interface Window { __sustainPlayed?: string[] } }
+if (typeof window !== 'undefined') window.__sustainPlayed = played;
+
+function playNow(id: string, buf: AudioBuffer, hold: boolean) {
+  played.push(id);
   const now = ac().currentTime;
 
   // Fade the old sound instead of cutting it - a dead cut clicks.
@@ -94,11 +103,13 @@ function schedule() {
   const waitMs = Math.max(0, (currentUntil - ac().currentTime) * 1000);
   pendingTimer = window.setTimeout(async () => {
     pendingTimer = null;
-    if (pending) {
-      const next = pending;
-      pending = null;
+    const next = queue.shift();
+    if (next) {
       const buf = await getBuffer(next.id);
-      if (buf) playNow(buf, next.hold && !lifted ? next.hold : false);
+      // Only the letter the finger is still resting on gets held - anything
+      // it already swept past plays once, briefly, like real sounding-out.
+      if (buf) playNow(next.id, buf, next.hold && queue.length === 0 && !lifted);
+      else if (queue.length || lifted) schedule();
     } else if (lifted) {
       releaseNow();
     }
@@ -131,10 +142,12 @@ export async function startPhoneme(id: string, hold: boolean): Promise<boolean> 
   if (!buf) return false;
   lifted = false;
 
-  if (ac().currentTime >= currentUntil || !source) {
-    playNow(buf, hold);
+  if (ac().currentTime >= currentUntil && queue.length === 0) {
+    playNow(id, buf, hold);
   } else {
-    pending = { id, hold };
+    // A wiggling finger can flap between two letters; don't stack repeats.
+    if (queue[queue.length - 1]?.id !== id) queue.push({ id, hold });
+    if (queue.length > 8) queue.shift();
     if (!pendingTimer) schedule();
   }
   return true;
@@ -144,8 +157,8 @@ export async function startPhoneme(id: string, hold: boolean): Promise<boolean> 
  *  airtime, then everything goes quiet. */
 export function stopPhoneme() {
   lifted = true;
-  if (!source && !pending) return;
-  if (ac().currentTime >= currentUntil && !pending) {
+  if (!source && queue.length === 0) return;
+  if (ac().currentTime >= currentUntil && queue.length === 0) {
     releaseNow();
   } else if (!pendingTimer) {
     schedule();
