@@ -296,6 +296,13 @@ button {
 
 /* ---- Roar soundboard ---- */
 
+.buildtag {
+  margin: 0;
+  font-size: .65rem;
+  letter-spacing: 1px;
+  color: #DCC9A4;
+}
+
 .roars-door {
   background: #fff;
   font-size: 1.6rem;
@@ -486,8 +493,28 @@ button {
   100% { transform: scale(.1); opacity: 0; }
 }
 
-/* Addition: the second addend reads as its own group */
-.berry--second { background: #EAF0FA; }
+/* Addition: the berries ARE the equation - group, plus sign, group */
+.berries--sum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 460px;
+}
+.berries__group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.berries__group .berry { width: 58px; height: 58px; font-size: 2rem; }
+.berries__op {
+  font-size: 2.6rem;
+  color: var(--accent);
+  font-weight: bold;
+  line-height: 1;
+}
 
 .berries--wrap {
   flex-wrap: wrap;

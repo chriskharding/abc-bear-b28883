@@ -72,6 +72,26 @@ export function BlendStrip({
     }
   };
 
+  /** The last letter the finger actually touched. A fast finger LEAPS -
+   *  the browser samples its position, and between two samples it can clear
+   *  a whole letter without ever being "on" it. Sweeping the skipped letters
+   *  in order is what keeps a fast swipe sounding out s-i-p, not s-p. */
+  const lastIdx = useRef<number | null>(null);
+
+  const sweepTo = (j: number | null) => {
+    if (j === null) {
+      void enter(null); // finger in a gap: release sound, keep the trail
+      return;
+    }
+    const from = lastIdx.current;
+    if (from !== null && Math.abs(j - from) > 1) {
+      const step = j > from ? 1 : -1;
+      for (let k = from + step; k !== j; k += step) void enter(k);
+    }
+    lastIdx.current = j;
+    void enter(j);
+  };
+
   const onDown = (e: React.PointerEvent) => {
     if (disabled) return;
     wakeSustain();
@@ -82,12 +102,13 @@ export function BlendStrip({
       stripRef.current?.setPointerCapture(e.pointerId);
     } catch { /* keep going uncaptured */ }
     setDragging(true);
-    void enter(letterAt(e.clientX));
+    lastIdx.current = null;
+    sweepTo(letterAt(e.clientX));
   };
 
   const onMove = (e: React.PointerEvent) => {
     if (disabled || !dragging) return;
-    void enter(letterAt(e.clientX));
+    sweepTo(letterAt(e.clientX));
   };
 
   const onUp = (e: React.PointerEvent) => {
@@ -95,6 +116,7 @@ export function BlendStrip({
     try {
       stripRef.current?.releasePointerCapture?.(e.pointerId);
     } catch { /* already released */ }
+    lastIdx.current = null;
     setDragging(false);
     stopPhoneme();
     activeRef.current = null;

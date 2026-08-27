@@ -251,6 +251,13 @@ export const CLIPS: Clip[] = [
     essential: true,
   },
   {
+    id: 'phrase:eat-them',
+    label: 'Great job! Now touch them to eat them!',
+    direction: 'Right after he answers the math question — inviting, like dessert is served.',
+    group: 'Math',
+    essential: true,
+  },
+  {
     id: 'phrase:feel-better',
     label: 'Great job! I feel MUCH better now!',
     direction: 'The bear is restored. Grateful and bouncy — this caps every ending.',

@@ -256,6 +256,7 @@ function StartScreen({
       <button className="roars-door" onClick={onRoars} aria-label="roar soundboard">
         🐻🔊
       </button>
+      <p className="buildtag">{__BUILD__}</p>
     </div>
   );
 }
@@ -496,6 +497,14 @@ function DoneScreen({
       await play('math:how-many', () => say('How many blueberries did we get?', { rate: 0.85 }), 1800);
       setChoices(digitChoices(answer));
       setStage('quiz');
+    } else if (game.kind === 'addition' && n === totalBerries) {
+      // All popped and counted - the equation gets said back whole.
+      setStage('full');
+      await speakParts([
+        num(game.a), { id: 'math:plus', fb: 'plus' }, num(game.b),
+        { id: 'math:is', fb: 'is' }, num(answer),
+      ]);
+      await finishUp();
     } else if (game.kind === 'takeaway' && n === game.remove) {
       setStage('full');
       await speakParts([
@@ -512,10 +521,22 @@ function DoneScreen({
     if (stage !== 'quiz' || chewing.current) return;
     if (d === answer) {
       chewing.current = true;
-      setStage('full');
       await play(`count:${answer}`, () => say(String(answer), { rate: 0.9 }), 800);
-      chewing.current = false;
-      await finishUp();
+      if (game.kind === 'addition') {
+        // Chris's design: the right answer earns the eating. Pop and count
+        // every berry, then the equation gets said back whole.
+        await play(
+          'phrase:eat-them',
+          () => say('Great job! Now touch them to eat them!', { rate: 0.9 }),
+          2200,
+        );
+        chewing.current = false;
+        setStage('eating');
+      } else {
+        setStage('full');
+        chewing.current = false;
+        await finishUp();
+      }
       return;
     }
     setWrongPick(d);
@@ -557,12 +578,24 @@ function DoneScreen({
 
   const promptText =
     stage === 'offer' ? 'The bear is sooo tired…'
-    : stage === 'eating' ? (game.kind === 'takeaway'
-        ? `Pop ${game.remove} blueberr${game.remove === 1 ? 'y' : 'ies'}!`
+    : stage === 'eating' ? (
+        game.kind === 'takeaway' ? `Pop ${game.remove} blueberr${game.remove === 1 ? 'y' : 'ies'}!`
+        : game.kind === 'addition' ? 'Touch them to eat them! Count!'
         : 'Feed him! Count the blueberries!')
     : stage === 'quiz' ? 'How many did we get?'
     : stage === 'full' ? 'All better! What a good helper.'
     : 'The blueberries worked!';
+
+  const berryBtn = (i: number, isEaten: boolean) => (
+    <button
+      key={i}
+      className={`berry ${isEaten ? 'berry--eaten' : ''}`}
+      onClick={() => eat(i)}
+      aria-label="blueberry"
+    >
+      🫐
+    </button>
+  );
 
   return (
     <div className="screen screen--done">
@@ -575,7 +608,9 @@ function DoneScreen({
         {stage !== 'offer' && game.kind === 'takeaway'
           ? `${game.start} − ${game.remove}${stage === 'full' || stage === 'again' ? ` = ${answer}` : ''}`
         : stage !== 'offer' && game.kind === 'addition'
-          ? `${game.a} + ${game.b} = ${stage === 'full' || stage === 'again' ? answer : '?'}`
+          // '?' only while unsolved; once he answers, the equation stands
+          // complete through the eating and the celebration.
+          ? `${game.a} + ${game.b} = ${stage === 'quiz' ? '?' : answer}`
           : `You read ${words} ${words === 1 ? 'word' : 'words'}!`}
       </h2>
       <p className="prompt">{promptText}</p>
@@ -583,25 +618,25 @@ function DoneScreen({
       {/* Berries are on screen from the first word of the scene - he should
           be LOOKING at 4 blueberries while hearing "I have 4 blueberries".
           Taps only count once the eating stage opens. Take-away keeps the
-          leftovers visible through the equation. */}
+          leftovers visible through the equation. Addition draws the actual
+          problem: a group, a plus sign, a group. */}
       {(stage === 'offer' || stage === 'eating' || (stage === 'quiz' && game.kind !== 'count')
         || (stage === 'full' && game.kind === 'takeaway')) && (
-        <div className="berries berries--wrap">
-          {eaten.map((isEaten, i) => (
-            <button
-              key={i}
-              className={[
-                'berry',
-                isEaten ? 'berry--eaten' : '',
-                game.kind === 'addition' && i >= game.a ? 'berry--second' : '',
-              ].join(' ')}
-              onClick={() => eat(i)}
-              aria-label="blueberry"
-            >
-              🫐
-            </button>
-          ))}
-        </div>
+        game.kind === 'addition' ? (
+          <div className="berries berries--sum">
+            <div className="berries__group">
+              {eaten.slice(0, game.a).map((isEaten, i) => berryBtn(i, isEaten))}
+            </div>
+            <span className="berries__op" aria-hidden="true">+</span>
+            <div className="berries__group">
+              {eaten.slice(game.a).map((isEaten, k) => berryBtn(game.a + k, isEaten))}
+            </div>
+          </div>
+        ) : (
+          <div className="berries berries--wrap">
+            {eaten.map((isEaten, i) => berryBtn(i, isEaten))}
+          </div>
+        )
       )}
 
       {stage === 'quiz' && (
