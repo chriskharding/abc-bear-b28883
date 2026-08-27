@@ -573,9 +573,11 @@ function DoneScreen({
       </h2>
       <p className="prompt">{promptText}</p>
 
-      {(stage === 'eating' || (stage === 'quiz' && game.kind !== 'count')
-        // Take-away keeps the leftovers on screen through the equation -
-        // "4 minus 2 is 2" lands while he's looking at the 2.
+      {/* Berries are on screen from the first word of the scene - he should
+          be LOOKING at 4 blueberries while hearing "I have 4 blueberries".
+          Taps only count once the eating stage opens. Take-away keeps the
+          leftovers visible through the equation. */}
+      {(stage === 'offer' || stage === 'eating' || (stage === 'quiz' && game.kind !== 'count')
         || (stage === 'full' && game.kind === 'takeaway')) && (
         <div className="berries berries--wrap">
           {eaten.map((isEaten, i) => (
