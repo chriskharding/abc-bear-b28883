@@ -586,10 +586,13 @@ function DoneScreen({
     : stage === 'full' ? 'All better! What a good helper.'
     : 'The blueberries worked!';
 
+  /** While eating, an eaten berry pops and vanishes (the fun part). After -
+   *  during the how-many question and the take-away equation - eaten berries
+   *  come back as squashed, faded skins: still countable, clearly eaten. */
   const berryBtn = (i: number, isEaten: boolean) => (
     <button
       key={i}
-      className={`berry ${isEaten ? 'berry--eaten' : ''}`}
+      className={`berry ${isEaten ? (stage === 'eating' ? 'berry--eaten' : 'berry--popped') : ''}`}
       onClick={() => eat(i)}
       aria-label="blueberry"
     >
@@ -634,9 +637,7 @@ function DoneScreen({
           </div>
         ) : (
           <div className="berries berries--wrap">
-            {/* During "how many did we get?" the eaten berries come back on
-                screen - he answers by counting what he sees, not from memory. */}
-            {eaten.map((isEaten, i) => berryBtn(i, isEaten && stage !== 'quiz'))}
+            {eaten.map((isEaten, i) => berryBtn(i, isEaten))}
           </div>
         )
       )}

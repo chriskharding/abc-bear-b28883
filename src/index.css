@@ -493,6 +493,16 @@ button {
   100% { transform: scale(.1); opacity: 0; }
 }
 
+/* Already eaten, still countable: squashed flat, faded - the popped skin */
+.berry--popped {
+  pointer-events: none;
+  opacity: .45;
+  transform: scaleY(.55) scaleX(1.15);
+  filter: grayscale(.4);
+  box-shadow: none;
+  background: transparent;
+}
+
 /* Addition: the berries ARE the equation - group, plus sign, group */
 .berries--sum {
   display: flex;
