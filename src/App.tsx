@@ -620,7 +620,7 @@ function DoneScreen({
           Taps only count once the eating stage opens. Take-away keeps the
           leftovers visible through the equation. Addition draws the actual
           problem: a group, a plus sign, a group. */}
-      {(stage === 'offer' || stage === 'eating' || (stage === 'quiz' && game.kind !== 'count')
+      {(stage === 'offer' || stage === 'eating' || stage === 'quiz'
         || (stage === 'full' && game.kind === 'takeaway')) && (
         game.kind === 'addition' ? (
           <div className="berries berries--sum">
@@ -634,7 +634,9 @@ function DoneScreen({
           </div>
         ) : (
           <div className="berries berries--wrap">
-            {eaten.map((isEaten, i) => berryBtn(i, isEaten))}
+            {/* During "how many did we get?" the eaten berries come back on
+                screen - he answers by counting what he sees, not from memory. */}
+            {eaten.map((isEaten, i) => berryBtn(i, isEaten && stage !== 'quiz'))}
           </div>
         )
       )}
