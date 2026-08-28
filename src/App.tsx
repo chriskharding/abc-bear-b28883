@@ -406,10 +406,11 @@ function rollEndGame(): EndGame {
   const kind = pickOne(['count', 'takeaway', 'addition'] as const);
   if (kind === 'count') return { kind, total: rand(3, 15) };
   if (kind === 'takeaway') {
-    const start = rand(3, 7);
+    const start = rand(3, 10);
     return { kind, start, remove: rand(1, start - 1) };
   }
-  return { kind, a: rand(2, 5), b: rand(1, 4) };
+  const a = rand(1, 9);
+  return { kind, a, b: rand(1, 10 - a) };
 }
 
 /** Three digit choices: the answer plus two near-misses. */

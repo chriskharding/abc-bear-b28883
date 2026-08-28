@@ -30,13 +30,13 @@ export const ROAR_IDS = ['sfx:roar:1', 'sfx:roar:2', 'sfx:roar:3', 'sfx:roar:kid
 /** The tired-bear openings; the ending draws one at random. */
 export const OFFER_IDS = ['phrase:blueberries-offer', 'phrase:blueberries-offer:2'];
 
-/** Every take-away the game can roll (start 3-7). */
+/** Every take-away the game can roll (start 3-10, remove any smaller). */
 export const TAKEAWAY_COMBOS: [number, number][] = [];
-for (let s = 3; s <= 7; s++) for (let m = 1; m < s; m++) TAKEAWAY_COMBOS.push([s, m]);
+for (let s = 3; s <= 10; s++) for (let m = 1; m < s; m++) TAKEAWAY_COMBOS.push([s, m]);
 
-/** Every addition the game can roll (a 2-5, b 1-4). */
+/** Every addition the game can roll (sums up to 10). */
 export const ADDITION_COMBOS: [number, number][] = [];
-for (let a = 2; a <= 5; a++) for (let b = 1; b <= 4; b++) ADDITION_COMBOS.push([a, b]);
+for (let a = 1; a <= 9; a++) for (let b = 1; b <= 10 - a; b++) ADDITION_COMBOS.push([a, b]);
 
 export const extraRoarClip = (n: number): Clip => ({
   id: `sfx:roar:extra:${n}`,
