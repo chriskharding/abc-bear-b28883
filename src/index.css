@@ -314,8 +314,36 @@ button {
 
 .roars { justify-content: flex-start; padding-top: 14px; gap: 16px; }
 
+.roars__meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.roars__collected { font-size: .85rem; color: var(--brown-soft); letter-spacing: .5px; }
+
 .roars__tokens { display: flex; gap: 6px; }
 .pip--token { background: var(--accent); }
+
+.roar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: clamp(76px, 22vw, 96px);
+}
+.roar-card__label {
+  font-size: .72rem;
+  color: var(--brown-soft);
+  text-align: center;
+  line-height: 1.2;
+}
+.roar-card__label--empty { color: #C3AC86; }
+
+/* An uncollected roar: gray, dashed, a question mark to hunt down */
+.roar-btn--hollow {
+  background: transparent;
+  border: 3px dashed #D8C29B;
+  box-shadow: none;
+  color: #C3AC86;
+  font-size: 2rem;
+  font-family: inherit;
+}
 
 .roars__grid {
   display: flex;

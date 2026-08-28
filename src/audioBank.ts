@@ -5,7 +5,7 @@
 // Anything not yet recorded falls back to the speech synthesiser, so the app
 // is always playable even with an empty bank.
 
-import { ROAR_IDS } from './clips';
+import { ROAR_IDS, ROAR_SLOTS } from './clips';
 
 const DB = 'abc-bear-audio';
 const STORE = 'clips';
@@ -154,6 +154,10 @@ export async function listRoarIds(): Promise<string[]> {
   const pool: string[] = [];
   for (const id of ROAR_IDS) {
     if (await hasClip(id)) pool.push(id);
+  }
+  // Named collection slots (mommy bear, grandma bear, ...).
+  for (const s of ROAR_SLOTS) {
+    if (!pool.includes(s.id) && await hasClip(s.id)) pool.push(s.id);
   }
   // Scan guest slots until the trail goes cold; gaps from deletions are fine.
   let misses = 0;

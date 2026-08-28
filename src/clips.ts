@@ -25,6 +25,22 @@ export type Clip = {
  *  discovers them at runtime (see listRoarIds in audioBank). */
 export const ROAR_IDS = ['sfx:roar:1', 'sfx:roar:2', 'sfx:roar:3', 'sfx:roar:kid'];
 
+/** The roar collection - named slots that make the soundboard a collector's
+ *  album. Filled slots are buttons; empty ones are gray "?" cards begging to
+ *  be collected. Recording into one happens in the parent studio, or right
+ *  on the board by tapping the empty card. */
+export const ROAR_SLOTS = [
+  { id: 'sfx:roar:kid', label: 'My Roar', emoji: '🦁' },
+  { id: 'sfx:roar:who:mommy', label: 'Mommy Bear', emoji: '👩' },
+  { id: 'sfx:roar:who:daddy', label: 'Daddy Bear', emoji: '👨' },
+  { id: 'sfx:roar:who:baby', label: 'Baby Bear', emoji: '👶' },
+  { id: 'sfx:roar:who:grandma', label: 'Grandma Bear', emoji: '👵' },
+  { id: 'sfx:roar:who:grandpa', label: 'Grandpa Bear', emoji: '👴' },
+  { id: 'sfx:roar:who:friend1', label: 'Friend Bear', emoji: '🧒' },
+  { id: 'sfx:roar:who:friend2', label: 'Friend Bear 2', emoji: '🧑' },
+  { id: 'sfx:roar:who:pet', label: 'Pet Bear', emoji: '🐶' },
+];
+
 /** A guest-roar slot. These are created on demand in the recorder - there is
  *  no fixed count, that's the point. */
 /** The tired-bear openings; the ending draws one at random. */
@@ -336,6 +352,18 @@ CLIPS.push(
     essential: false,
   },
 );
+
+// Named roar slots appear in the parent studio too (kid's own already exists).
+for (const s of ROAR_SLOTS) {
+  if (s.id === 'sfx:roar:kid') continue;
+  CLIPS.push({
+    id: s.id,
+    label: `ROAR — ${s.label}!`,
+    direction: `Hand ${s.label} the mic. Big and happy — their roar fills a card in the collection.`,
+    group: 'Bear',
+    essential: false,
+  });
+}
 
 export const ESSENTIAL_COUNT = CLIPS.filter((c) => c.essential).length;
 

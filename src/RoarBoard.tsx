@@ -1,16 +1,25 @@
-// The roar soundboard - Charlie's treat screen. Every recorded roar (daddy
-// bear, his own, mommy bear, guests) is a big button. Rationed: roar plays
-// cost tokens, and tokens come from reading. Ten in the bank, refilled by
-// finishing a session - so the soundboard is the dessert and reading is how
-// you order more.
+// The roar collection - Charlie's soundboard as a collector's album. Named
+// cards for everyone who loves him: filled cards play their roar (costing a
+// token), empty cards are gray "?"s that record on the spot when tapped, so
+// "go get grandma's roar" is a quest with a visible reward. Guest roars from
+// the early days show as bear cards, and the bear's own takes lead the grid.
+// Rationed: plays cost tokens, tokens come from reading. Recording is free -
+// adding a voice is a gift, not a purchase.
 
 import { useEffect, useRef, useState } from 'react';
 import { Bear, type Mood } from './Bear';
 import { playClip, putClip, forget, listRoarIds } from './audioBank';
+import { ROAR_SLOTS } from './clips';
 import { trimSilence } from './trim';
-import { say } from './audio';
 
-const FACES = ['🐻', '🧸', '🦁', '🐯', '🐨', '🐼', '🦊', '🐮', '🐷', '🐸'];
+type Card = {
+  key: string;
+  emoji: string;
+  label: string;
+  /** Ids to draw from when played; empty card = nothing recorded yet. */
+  ids: string[];
+  empty: boolean;
+};
 
 export function RoarBoard({
   tokens, onSpend, onBack,
@@ -21,26 +30,72 @@ export function RoarBoard({
 }) {
   const [pool, setPool] = useState<string[]>([]);
   const [mood, setMood] = useState<Mood>('calm');
-  const [capturing, setCapturing] = useState(false);
+  const [capturingKey, setCapturingKey] = useState<string | null>(null);
   const playing = useRef(false);
   const recRef = useRef<MediaRecorder | null>(null);
   const empty = tokens <= 0;
-  // Mic needs a secure context - true on localhost and https, false on the
-  // plain-http LAN address, where the button simply doesn't render.
+  // Mic needs a secure context - true on localhost and https.
   const canRecord = !!navigator.mediaDevices?.getUserMedia;
 
+  const refresh = () => listRoarIds().then(setPool);
   useEffect(() => {
-    void listRoarIds().then(setPool);
+    void refresh();
     return () => recRef.current?.stream.getTracks().forEach((t) => t.stop());
   }, []);
 
-  /** A guest roars straight into the game: tap, roar, done - the roar
-   *  becomes a button immediately and joins the reading rewards. */
-  const captureRoar = async () => {
-    if (capturing) {
+  // Out of tokens: the bear explains the bargain out loud (recorded voice
+  // only - if the clip were missing this stays a visual).
+  useEffect(() => {
+    if (!empty) return;
+    const t = setTimeout(() => void playClip('phrase:earn-roars'), 400);
+    return () => clearTimeout(t);
+  }, [empty]);
+
+  // The bear's own takes lead, then the named collection, then legacy guests.
+  const bearIds = ['sfx:roar:1', 'sfx:roar:2', 'sfx:roar:3'].filter((id) => pool.includes(id));
+  const cards: Card[] = [
+    ...(bearIds.length
+      ? [{ key: 'bear', emoji: '🐻', label: 'Bear', ids: bearIds, empty: false }]
+      : []),
+    ...ROAR_SLOTS.map((s) => ({
+      key: s.id,
+      emoji: s.emoji,
+      label: s.label,
+      ids: [s.id],
+      empty: !pool.includes(s.id),
+    })),
+    ...pool
+      .filter((id) => id.startsWith('sfx:roar:extra:'))
+      .map((id) => ({
+        key: id,
+        emoji: '🐻',
+        label: `Guest ${id.split(':').pop()}`,
+        ids: [id],
+        empty: false,
+      })),
+  ];
+  const collected = ROAR_SLOTS.filter((s) => pool.includes(s.id)).length;
+
+  const playCard = async (card: Card) => {
+    if (playing.current) return;
+    if (empty) return; // grid is visually locked; the READ button is the exit
+    playing.current = true;
+    onSpend();
+    setMood('roar');
+    const id = card.ids[Math.floor(Math.random() * card.ids.length)];
+    await playClip(id);
+    setMood('calm');
+    playing.current = false;
+  };
+
+  /** Tap an empty card: record straight into that slot. Free - a new voice
+   *  is a gift for the collection, not a purchase. */
+  const captureInto = async (card: Card) => {
+    if (capturingKey === card.key) {
       recRef.current?.stop();
       return;
     }
+    if (capturingKey) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
@@ -50,59 +105,24 @@ export function RoarBoard({
       rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
       rec.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        setCapturing(false);
+        setCapturingKey(null);
         const trimmed = await trimSilence(new Blob(chunks, { type: rec.mimeType }));
-        // Next free guest slot after whatever the pool already knows about.
-        const maxN = pool
-          .filter((id) => id.startsWith('sfx:roar:extra:'))
-          .reduce((m, id) => Math.max(m, Number(id.split(':').pop())), 0);
-        const id = `sfx:roar:extra:${maxN + 1}`;
+        const id = card.ids[0];
         forget(id);
         await putClip(id, trimmed);
-        setPool(await listRoarIds());
-        // Play it right back - the payoff of roaring into a phone.
+        await refresh();
+        // Play it right back - the new card announces itself.
         setMood('roar');
         await playClip(id);
         setMood('calm');
       };
       rec.start();
       recRef.current = rec;
-      setCapturing(true);
-      // Roars are short; stop on tap or after 4 seconds, whichever first.
+      setCapturingKey(card.key);
       setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 4000);
     } catch {
-      say('The microphone is not working here.', { rate: 0.9 });
+      setCapturingKey(null);
     }
-  };
-
-  // The out-of-roars message is spoken - he can't read the screen.
-  useEffect(() => {
-    if (!empty) return;
-    const t = setTimeout(
-      () => play_earn(),
-      400,
-    );
-    return () => clearTimeout(t);
-  }, [empty]);
-
-  const play_earn = async () => {
-    if (!(await playClip('phrase:earn-roars'))) {
-      say('No more roars! Do some reading to earn more!', { rate: 0.9 });
-    }
-  };
-
-  const roar = async (id: string) => {
-    if (playing.current) return;
-    if (empty) {
-      void play_earn();
-      return;
-    }
-    playing.current = true;
-    onSpend();
-    setMood('roar');
-    await playClip(id);
-    setMood('calm');
-    playing.current = false;
   };
 
   return (
@@ -112,39 +132,38 @@ export function RoarBoard({
         <button className="hear-btn hear-btn--back" onClick={onBack} aria-label="back">
           ⬅️
         </button>
-        <div className="roars__tokens" aria-label={`${tokens} roars left`}>
-          {Array.from({ length: 10 }, (_, i) => (
-            <span key={i} className={`pip ${i < tokens ? 'pip--token' : ''}`} />
-          ))}
+        <div className="roars__meta">
+          <span className="roars__collected">{collected}/{ROAR_SLOTS.length} collected</span>
+          <div className="roars__tokens" aria-label={`${tokens} roars left`}>
+            {Array.from({ length: 10 }, (_, i) => (
+              <span key={i} className={`pip ${i < tokens ? 'pip--token' : ''}`} />
+            ))}
+          </div>
         </div>
       </div>
 
-      <Bear mood={mood} size={150} />
+      <Bear mood={mood} size={130} />
 
       <div className={`roars__grid ${empty ? 'roars__grid--empty' : ''}`}>
-        {pool.map((id, i) => (
-          <button
-            key={id}
-            className="roar-btn"
-            onClick={() => roar(id)}
-            aria-label={`play roar ${i + 1}`}
-          >
-            {FACES[i % FACES.length]}
-          </button>
+        {cards.map((card) => (
+          <div key={card.key} className="roar-card">
+            <button
+              className={[
+                'roar-btn',
+                card.empty ? 'roar-btn--hollow' : '',
+                capturingKey === card.key ? 'roar-btn--live' : '',
+              ].join(' ')}
+              onClick={() => (card.empty ? (canRecord && captureInto(card)) : playCard(card))}
+              aria-label={card.empty ? `record ${card.label}` : `play ${card.label}`}
+            >
+              {capturingKey === card.key ? '🔴' : card.empty ? '?' : card.emoji}
+            </button>
+            <span className={`roar-card__label ${card.empty ? 'roar-card__label--empty' : ''}`}>
+              {card.label}
+            </span>
+          </div>
         ))}
       </div>
-
-      {/* Roar INTO the game - free (recording is a gift, playing costs).
-          Renders only where the mic can actually work. */}
-      {canRecord && (
-        <button
-          className={`roar-btn roar-btn--mic ${capturing ? 'roar-btn--live' : ''}`}
-          onClick={captureRoar}
-          aria-label="record a new roar"
-        >
-          {capturing ? '🔴' : '🎤'}
-        </button>
-      )}
 
       {empty && (
         <>
