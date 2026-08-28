@@ -352,7 +352,9 @@ button {
   gap: 14px;
   max-width: 420px;
 }
-.roars__grid--empty { opacity: .35; pointer-events: none; }
+/* Out of tokens: plays are gated in code, but recording a NEW roar stays
+   possible - adding a voice is a gift, never spent. So dim, don't disable. */
+.roars__grid--empty { opacity: .45; }
 
 .roar-btn {
   width: clamp(76px, 22vw, 96px);

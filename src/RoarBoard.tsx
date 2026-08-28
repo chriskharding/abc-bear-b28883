@@ -76,6 +76,20 @@ export function RoarBoard({
   ];
   const collected = ROAR_SLOTS.filter((s) => pool.includes(s.id)).length;
 
+  // A fresh guest slot, always one past the biggest that exists.
+  const nextGuestId = `sfx:roar:extra:${
+    pool
+      .filter((id) => id.startsWith('sfx:roar:extra:'))
+      .reduce((m, id) => Math.max(m, Number(id.split(':').pop())), 0) + 1
+  }`;
+  const addGuestCard: Card = {
+    key: 'add-guest',
+    emoji: '🎤',
+    label: 'New guest!',
+    ids: [nextGuestId],
+    empty: true,
+  };
+
   const playCard = async (card: Card) => {
     if (playing.current) return;
     if (empty) return; // grid is visually locked; the READ button is the exit
@@ -145,7 +159,7 @@ export function RoarBoard({
       <Bear mood={mood} size={130} />
 
       <div className={`roars__grid ${empty ? 'roars__grid--empty' : ''}`}>
-        {cards.map((card) => (
+        {[...cards, ...(canRecord ? [addGuestCard] : [])].map((card) => (
           <div key={card.key} className="roar-card">
             <button
               className={[
@@ -156,7 +170,10 @@ export function RoarBoard({
               onClick={() => (card.empty ? (canRecord && captureInto(card)) : playCard(card))}
               aria-label={card.empty ? `record ${card.label}` : `play ${card.label}`}
             >
-              {capturingKey === card.key ? '🔴' : card.empty ? '?' : card.emoji}
+              {capturingKey === card.key ? '🔴'
+                : card.key === 'add-guest' ? '🎤'
+                : card.empty ? '?'
+                : card.emoji}
             </button>
             <span className={`roar-card__label ${card.empty ? 'roar-card__label--empty' : ''}`}>
               {card.label}
