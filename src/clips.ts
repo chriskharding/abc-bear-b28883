@@ -30,6 +30,14 @@ export const ROAR_IDS = ['sfx:roar:1', 'sfx:roar:2', 'sfx:roar:3', 'sfx:roar:kid
 /** The tired-bear openings; the ending draws one at random. */
 export const OFFER_IDS = ['phrase:blueberries-offer', 'phrase:blueberries-offer:2'];
 
+/** Every take-away the game can roll (start 3-7). */
+export const TAKEAWAY_COMBOS: [number, number][] = [];
+for (let s = 3; s <= 7; s++) for (let m = 1; m < s; m++) TAKEAWAY_COMBOS.push([s, m]);
+
+/** Every addition the game can roll (a 2-5, b 1-4). */
+export const ADDITION_COMBOS: [number, number][] = [];
+for (let a = 2; a <= 5; a++) for (let b = 1; b <= 4; b++) ADDITION_COMBOS.push([a, b]);
+
 export const extraRoarClip = (n: number): Clip => ({
   id: `sfx:roar:extra:${n}`,
   label: `ROAR — guest #${n}`,
@@ -272,6 +280,62 @@ export const CLIPS: Clip[] = [
   ...SET_TWO.map((s) => soundClip(s, false)),
   ...SET_TWO_WORDS.map((w) => wordClip(w, false)),
 ];
+
+// --- Natural math sentences. One recorded sentence per problem the game can
+// roll, so nothing has to be stitched from atoms ("5......minus......3").
+// The stitched atoms remain as fallback for anything not yet recorded.
+// Fruit is never named, so these cover blueberries, bananas, all of it. ---
+for (const [s, m] of TAKEAWAY_COMBOS) {
+  CLIPS.push({
+    id: `math:ta:${s}:${m}`,
+    label: `I have ${s} — take away ${m}!`,
+    direction: 'One natural sentence, playful. No fruit name — the screen shows the fruit.',
+    group: 'Math sentences',
+    essential: false,
+  });
+  CLIPS.push({
+    id: `math:tam:${s}:${m}`,
+    label: `${s} minus ${m} is ${s - m}!`,
+    direction: 'One natural sentence, triumphant at the end.',
+    group: 'Math sentences',
+    essential: false,
+  });
+}
+for (const [a, b] of ADDITION_COMBOS) {
+  CLIPS.push({
+    id: `math:add:${a}:${b}`,
+    label: `${a} plus ${b} is how many?`,
+    direction: 'One natural question.',
+    group: 'Math sentences',
+    essential: false,
+  });
+  CLIPS.push({
+    id: `math:addeq:${a}:${b}`,
+    label: `${a} plus ${b} is ${a + b}!`,
+    direction: 'One natural sentence, triumphant at the end.',
+    group: 'Math sentences',
+    essential: false,
+  });
+}
+
+// Fruit-neutral versions of the lines that currently say "blueberries", for
+// when the bear is eating strawberries or bananas instead.
+CLIPS.push(
+  {
+    id: 'phrase:offer-snack',
+    label: 'You did a great job! I\'m SO tired… can you feed me a yummy snack?',
+    direction: 'Same sleepy energy as the blueberry offer, fruit-neutral.',
+    group: 'Phrases',
+    essential: false,
+  },
+  {
+    id: 'math:how-many-generic',
+    label: 'How many did we get?',
+    direction: 'Fruit-neutral version of the how-many question.',
+    group: 'Math',
+    essential: false,
+  },
+);
 
 export const ESSENTIAL_COUNT = CLIPS.filter((c) => c.essential).length;
 

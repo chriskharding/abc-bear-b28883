@@ -503,6 +503,16 @@ button {
   background: transparent;
 }
 
+/* An eaten banana comes back as its peel: flopped over, drooping */
+.berry--peel {
+  pointer-events: none;
+  opacity: .55;
+  transform: rotate(150deg) scaleY(.65);
+  filter: saturate(.6);
+  box-shadow: none;
+  background: transparent;
+}
+
 /* Addition: the berries ARE the equation - group, plus sign, group */
 .berries--sum {
   display: flex;

@@ -4,6 +4,7 @@ import { buildSession, soundFor, type Round } from './curriculum';
 import { roar, grumble, say, wakeAudio } from './audio';
 import { playClip, stopAll, clipDuration, unlockPlayer, listRoarIds } from './audioBank';
 import { OFFER_IDS } from './clips';
+import { FRUITS } from './fruits';
 import { recordLetterAnswer, recordSession, recordWordRead } from './stats';
 import { BlendStrip } from './BlendStrip';
 import { Recorder } from './Recorder';
@@ -429,6 +430,9 @@ function DoneScreen({
   words, onAgain, onMore, onComplete,
 }: { words: number; onAgain: () => void; onMore: () => void; onComplete: () => void }) {
   const [game] = useState<EndGame>(rollEndGame);
+  /** Tonight's snack - Charlie's request. Sentences never name the fruit,
+   *  so any recorded math line works over any of them. */
+  const [fruit] = useState(() => pickOne(FRUITS));
   const totalBerries =
     game.kind === 'count' ? game.total
     : game.kind === 'takeaway' ? game.start
@@ -447,31 +451,52 @@ function DoneScreen({
   const chewing = useRef(false);
   const misses = useRef(0);
 
-  /** A random tired voice - Charlie wanted the ending to change it up. */
+  /** A random tired voice - Charlie wanted the ending to change it up. When
+   *  the snack isn't blueberries, the fruit-neutral offer goes first so the
+   *  bear doesn't ask for blueberries over a pile of bananas. */
   const offerSpeech = async () => {
-    for (const id of [...OFFER_IDS].sort(() => Math.random() - 0.5)) {
+    const shuffledOffers = [...OFFER_IDS].sort(() => Math.random() - 0.5);
+    const ids = fruit.name === 'blueberries'
+      ? shuffledOffers
+      : ['phrase:offer-snack', ...shuffledOffers];
+    for (const id of ids) {
       if (await playClip(id)) return;
     }
-    say("You did a great job! I'm so tired. Should I have some blueberries to wake up?", { rate: 0.85 });
+    say("You did a great job! I'm so tired. Can you feed me a yummy snack?", { rate: 0.85 });
     await wait(4200);
+  };
+
+  /** Fruit-aware "how many did we get?" with layered fallbacks. */
+  const askHowMany = async () => {
+    const ids = fruit.name === 'blueberries'
+      ? ['math:how-many']
+      : ['math:how-many-generic', 'math:how-many'];
+    for (const id of ids) {
+      if (await playClip(id)) return;
+    }
+    say('How many did we get?', { rate: 0.85 });
+    await wait(1600);
   };
 
   useEffect(() => {
     const t = setTimeout(async () => {
       await offerSpeech();
       if (game.kind === 'takeaway') {
-        await speakParts([
-          { id: 'math:i-have', fb: 'I have' }, num(game.start),
-          { id: 'math:blueberries', fb: 'blueberries' },
-          { id: 'math:take-away', fb: 'take away' }, num(game.remove),
-        ]);
+        // The recorded whole sentence beats the stitched atoms every time.
+        if (!(await playClip(`math:ta:${game.start}:${game.remove}`))) {
+          await speakParts([
+            { id: 'math:i-have', fb: 'I have' }, num(game.start),
+            { id: 'math:take-away', fb: 'take away' }, num(game.remove),
+          ]);
+        }
         setStage('eating');
       } else if (game.kind === 'addition') {
-        await speakParts([
-          num(game.a), { id: 'math:plus', fb: 'plus' }, num(game.b),
-          { id: 'math:blueberries', fb: 'blueberries' },
-          { id: 'math:how-many', fb: 'is how many?' },
-        ]);
+        if (!(await playClip(`math:add:${game.a}:${game.b}`))) {
+          await speakParts([
+            num(game.a), { id: 'math:plus', fb: 'plus' }, num(game.b),
+            { id: 'math:is', fb: 'is how many?' },
+          ]);
+        }
         setChoices(digitChoices(answer));
         setStage('quiz');
       } else {
@@ -494,23 +519,27 @@ function DoneScreen({
     chewing.current = false;
 
     if (game.kind === 'count' && n === totalBerries) {
-      await play('math:how-many', () => say('How many blueberries did we get?', { rate: 0.85 }), 1800);
+      await askHowMany();
       setChoices(digitChoices(answer));
       setStage('quiz');
     } else if (game.kind === 'addition' && n === totalBerries) {
       // All popped and counted - the equation gets said back whole.
       setStage('full');
-      await speakParts([
-        num(game.a), { id: 'math:plus', fb: 'plus' }, num(game.b),
-        { id: 'math:is', fb: 'is' }, num(answer),
-      ]);
+      if (!(await playClip(`math:addeq:${game.a}:${game.b}`))) {
+        await speakParts([
+          num(game.a), { id: 'math:plus', fb: 'plus' }, num(game.b),
+          { id: 'math:is', fb: 'is' }, num(answer),
+        ]);
+      }
       await finishUp();
     } else if (game.kind === 'takeaway' && n === game.remove) {
       setStage('full');
-      await speakParts([
-        num(game.start), { id: 'math:minus', fb: 'minus' }, num(game.remove),
-        { id: 'math:is', fb: 'is' }, num(answer),
-      ]);
+      if (!(await playClip(`math:tam:${game.start}:${game.remove}`))) {
+        await speakParts([
+          num(game.start), { id: 'math:minus', fb: 'minus' }, num(game.remove),
+          { id: 'math:is', fb: 'is' }, num(answer),
+        ]);
+      }
       await finishUp();
     }
   };
@@ -550,7 +579,7 @@ function DoneScreen({
         await play(`count:${k}`, () => say(String(k), { rate: 0.9 }), 650);
         await wait(120);
       }
-      await play('math:how-many', () => say('How many blueberries did we get?', { rate: 0.85 }), 1800);
+      await askHowMany();
     }
     chewing.current = false;
     setWrongPick(null);
@@ -579,24 +608,30 @@ function DoneScreen({
   const promptText =
     stage === 'offer' ? 'The bear is sooo tired…'
     : stage === 'eating' ? (
-        game.kind === 'takeaway' ? `Pop ${game.remove} blueberr${game.remove === 1 ? 'y' : 'ies'}!`
+        game.kind === 'takeaway'
+          ? `Pop ${game.remove} ${game.remove === 1 ? fruit.one : fruit.name}!`
         : game.kind === 'addition' ? 'Touch them to eat them! Count!'
-        : 'Feed him! Count the blueberries!')
+        : `Feed him! Count the ${fruit.name}!`)
     : stage === 'quiz' ? 'How many did we get?'
     : stage === 'full' ? 'All better! What a good helper.'
-    : 'The blueberries worked!';
+    : `The ${fruit.name} worked!`;
 
-  /** While eating, an eaten berry pops and vanishes (the fun part). After -
-   *  during the how-many question and the take-away equation - eaten berries
-   *  come back as squashed, faded skins: still countable, clearly eaten. */
+  /** While eating, an eaten fruit pops and vanishes (the fun part). After -
+   *  during the how-many question and the take-away equation - eaten ones
+   *  come back squashed and faded: still countable, clearly eaten. Bananas
+   *  come back as peels, per Charlie. */
   const berryBtn = (i: number, isEaten: boolean) => (
     <button
       key={i}
-      className={`berry ${isEaten ? (stage === 'eating' ? 'berry--eaten' : 'berry--popped') : ''}`}
+      className={`berry ${isEaten
+        ? (stage === 'eating' ? 'berry--eaten'
+          : fruit.name === 'bananas' ? 'berry--peel'
+          : 'berry--popped')
+        : ''}`}
       onClick={() => eat(i)}
-      aria-label="blueberry"
+      aria-label={fruit.one}
     >
-      🫐
+      {fruit.render()}
     </button>
   );
 
