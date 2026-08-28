@@ -403,7 +403,7 @@ export function Recorder({ onExit }: { onExit: () => void }) {
           ← library
         </button>
         <span className="rec__count">
-          {essentialDone}/{ESSENTIAL_COUNT} core · new this sitting: {newIds.size}
+          <b>{allClips.filter((c) => !hasAudio(c.id)).length} left</b> · {newIds.size} recorded this sitting
         </span>
       </div>
 
