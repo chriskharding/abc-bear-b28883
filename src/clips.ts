@@ -36,6 +36,7 @@ export const ROAR_SLOTS = [
   { id: 'sfx:roar:who:baby', label: 'Baby Bear', emoji: '👶' },
   { id: 'sfx:roar:who:grandma', label: 'Grandma Bear', emoji: '👵' },
   { id: 'sfx:roar:who:grandpa', label: 'Grandpa Bear', emoji: '👴' },
+  { id: 'sfx:roar:who:aupair', label: 'Au Pair Bear', emoji: '🧑‍🍼' },
   { id: 'sfx:roar:who:friend1', label: 'Friend Bear', emoji: '🧒' },
   { id: 'sfx:roar:who:friend2', label: 'Friend Bear 2', emoji: '🧑' },
   { id: 'sfx:roar:who:pet', label: 'Pet Bear', emoji: '🐶' },
