@@ -485,9 +485,11 @@ function DoneScreen({
       if (game.kind === 'takeaway') {
         // The recorded whole sentence beats the stitched atoms every time.
         if (!(await playClip(`math:ta:${game.start}:${game.remove}`))) {
+          // Stitched fallback teaches both words too: take away, then minus.
           await speakParts([
             { id: 'math:i-have', fb: 'I have' }, num(game.start),
             { id: 'math:take-away', fb: 'take away' }, num(game.remove),
+            num(game.start), { id: 'math:minus', fb: 'minus' }, num(game.remove),
           ]);
         }
         setStage('eating');

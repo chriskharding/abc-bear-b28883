@@ -288,8 +288,8 @@ export const CLIPS: Clip[] = [
 for (const [s, m] of TAKEAWAY_COMBOS) {
   CLIPS.push({
     id: `math:ta:${s}:${m}`,
-    label: `I have ${s} — take away ${m}!`,
-    direction: 'One natural sentence, playful. No fruit name — the screen shows the fruit.',
+    label: `I have ${s}. Take away ${m} — that's ${s} minus ${m}!`,
+    direction: 'One natural sentence, playful — "take away" AND "minus" both, so he links the words. No fruit name.',
     group: 'Math sentences',
     essential: false,
   });
@@ -304,8 +304,8 @@ for (const [s, m] of TAKEAWAY_COMBOS) {
 for (const [a, b] of ADDITION_COMBOS) {
   CLIPS.push({
     id: `math:add:${a}:${b}`,
-    label: `${a} plus ${b} is how many?`,
-    direction: 'One natural question.',
+    label: `Let's add! ${a} plus ${b} is how many?`,
+    direction: 'One natural question — "add" and "plus" both, so he links the words.',
     group: 'Math sentences',
     essential: false,
   });
