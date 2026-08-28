@@ -86,48 +86,10 @@ export function grumble() {
   osc.stop(now + 0.4);
 }
 
-let voice: SpeechSynthesisVoice | null = null;
-function bestVoice(): SpeechSynthesisVoice | null {
-  if (voice) return voice;
-  const all = speechSynthesis.getVoices();
-  voice =
-    all.find((v) => /Samantha|Karen|Moira/.test(v.name)) ??
-    all.find((v) => v.lang.startsWith('en')) ??
-    null;
-  return voice;
-}
-
-export function say(text: string, opts: { rate?: number; pitch?: number } = {}) {
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = opts.rate ?? 0.85;
-  u.pitch = opts.pitch ?? 1.0;
-  const v = bestVoice();
-  if (v) u.voice = v;
-  speechSynthesis.speak(u);
-}
-
-/** Sound out a word phoneme by phoneme, then say it whole - the actual
- *  mechanic of blending. Returns roughly when it finishes. */
-export function blend(word: string, sayFor: (l: string) => string): Promise<void> {
-  return new Promise((resolve) => {
-    speechSynthesis.cancel();
-    const letters = word.split('');
-    letters.forEach((l, i) => {
-      const u = new SpeechSynthesisUtterance(sayFor(l));
-      u.rate = 0.7;
-      const v = bestVoice();
-      if (v) u.voice = v;
-      // Small gap between phonemes so they stay distinct
-      setTimeout(() => speechSynthesis.speak(u), i * 40);
-    });
-    const whole = new SpeechSynthesisUtterance(word);
-    whole.rate = 0.75;
-    const v = bestVoice();
-    if (v) whole.voice = v;
-    whole.onend = () => resolve();
-    setTimeout(() => speechSynthesis.speak(whole), letters.length * 40 + 60);
-    // Fallback in case onend never fires (Safari does this sometimes)
-    setTimeout(resolve, letters.length * 700 + 1200);
-  });
+/** Chris's rule: NO robot voices, ever. This used to be the speech-synthesis
+ *  fallback; now a missing clip means a quiet beat and a console note, never
+ *  a synthetic voice. Every call site stays as-is - the last-resort layer is
+ *  simply silence. Fix a silent moment by recording the named clip. */
+export function say(text: string, _opts: { rate?: number; pitch?: number } = {}) {
+  console.warn(`[abc-bear] missing recording, staying silent instead of TTS: "${text}"`);
 }
