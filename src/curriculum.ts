@@ -68,27 +68,43 @@ export type Round =
   | { kind: 'sound'; target: Sound; choices: Sound[] }
   | { kind: 'word'; word: string };
 
+/** Words used in the previous session, so back-to-back sessions (READ MORE
+ *  chains especially) don't serve the same words again. */
+let lastSessionWords: string[] = [];
+
 /** Build one short session. Deliberately fixed-length - the session ends,
- *  and that is the point. There is no "one more level". */
+ *  and that is the point. There is no "one more level".
+ *
+ *  No letter is targeted twice in a session, no word appears twice in a
+ *  session, and the previous session's words sit at the back of the deck so
+ *  they only return once everything fresher has had a turn. */
 export function buildSession(roundCount = 6): Round[] {
   const rounds: Round[] = [];
-  const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
+  const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5);
 
+  const letterDeck = shuffle(SET_ONE);
+  const wordDeck = [
+    ...shuffle(SET_ONE_WORDS.filter((w) => !lastSessionWords.includes(w))),
+    ...shuffle(lastSessionWords),
+  ];
+
+  const usedWords: string[] = [];
   for (let i = 0; i < roundCount; i++) {
     // Alternate, starting with sounds so he warms up before blending.
     if (i % 2 === 0) {
-      const target = pick(SET_ONE);
-      const distractors = SET_ONE.filter((s) => s.letter !== target.letter)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 2);
+      const target = letterDeck[(i / 2) % letterDeck.length];
+      const distractors = shuffle(SET_ONE.filter((s) => s.letter !== target.letter)).slice(0, 2);
       rounds.push({
         kind: 'sound',
         target,
-        choices: [target, ...distractors].sort(() => Math.random() - 0.5),
+        choices: shuffle([target, ...distractors]),
       });
     } else {
-      rounds.push({ kind: 'word', word: pick(SET_ONE_WORDS) });
+      const word = wordDeck[usedWords.length % wordDeck.length];
+      usedWords.push(word);
+      rounds.push({ kind: 'word', word });
     }
   }
+  lastSessionWords = usedWords;
   return rounds;
 }
