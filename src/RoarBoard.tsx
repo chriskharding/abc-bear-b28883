@@ -124,6 +124,14 @@ export function RoarBoard({
         const id = card.ids[0];
         forget(id);
         await putClip(id, trimmed);
+        // Flag it for the studio's "export new takes", so soundboard roars
+        // aren't stranded on the device they were recorded on.
+        try {
+          const key = 'abc-bear-new-takes';
+          const cur = new Set(JSON.parse(localStorage.getItem(key) ?? '[]'));
+          cur.add(id);
+          localStorage.setItem(key, JSON.stringify([...cur]));
+        } catch { /* best effort */ }
         await refresh();
         // Play it right back - the new card announces itself.
         setMood('roar');
