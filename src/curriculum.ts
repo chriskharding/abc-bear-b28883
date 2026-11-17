@@ -61,9 +61,9 @@ export const SET_FOUR: Sound[] = [
 
 export const ALL_SOUNDS = [...SET_ONE, ...SET_TWO, ...SET_THREE, ...SET_FOUR];
 
-/** The sounds gameplay may deal. Sets 3-4 join the moment their recordings
- *  land - until then a prompt for them would be silent (no robot voices). */
-export const PLAYABLE_SOUNDS = [...SET_ONE, ...SET_TWO];
+/** The sounds gameplay may deal. Full alphabet since 2026-11-17 - every
+ *  letter has a recording. */
+export const PLAYABLE_SOUNDS = ALL_SOUNDS;
 
 /** Every word buildable from Set 1. All decodable - nothing here has to be
  *  memorised, he can sound out all of it. */
@@ -148,7 +148,12 @@ export const soundFor = (letter: string): Sound =>
 
 /** Words gameplay may deal: everything whose letters AND recording exist.
  *  Sets 3-4 words join when their sounds and clips land. */
-export const PLAYABLE_WORDS = [...SET_ONE_WORDS, ...SET_TWO_WORDS];
+export const PLAYABLE_WORDS = [
+  ...SET_ONE_WORDS, ...SET_TWO_WORDS, ...SET_THREE_WORDS, ...SET_FOUR_WORDS,
+];
+
+/** Four-letter finale pool: the original blends plus the book bank. */
+export const PLAYABLE_BLENDS = [...BLEND_WORDS, ...BLEND_WORDS_2];
 
 export type Round =
   | { kind: 'sound'; target: Sound; choices: Sound[] }
@@ -176,8 +181,8 @@ export function buildSession(roundCount = 6): Round[] {
     ...shuffle(lastSessionWords.filter((w) => PLAYABLE_WORDS.includes(w))),
   ];
   const blendDeck = [
-    ...shuffle(BLEND_WORDS.filter((w) => !lastSessionWords.includes(w))),
-    ...shuffle(BLEND_WORDS.filter((w) => lastSessionWords.includes(w))),
+    ...shuffle(PLAYABLE_BLENDS.filter((w) => !lastSessionWords.includes(w))),
+    ...shuffle(PLAYABLE_BLENDS.filter((w) => lastSessionWords.includes(w))),
   ];
 
   const usedWords: string[] = [];
