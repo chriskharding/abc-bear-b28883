@@ -124,6 +124,8 @@ export function RoarBoard({
         const id = card.ids[0];
         forget(id);
         await putClip(id, trimmed);
+        // To every other device, via the cloud (no-op until it's deployed).
+        void import('./roarCloud').then((rc) => rc.uploadRoar(id, trimmed));
         // Flag it for the studio's "export new takes", so soundboard roars
         // aren't stranded on the device they were recorded on.
         try {

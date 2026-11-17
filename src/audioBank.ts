@@ -65,6 +65,15 @@ export async function urlFor(id: string): Promise<string | null> {
     return url;
   }
 
+  // A cloud roar (recorded on some other device) beats the missing-file path.
+  if (id.startsWith('sfx:roar:')) {
+    const { hasCloudRoar, cloudUrlFor } = await import('./roarCloud');
+    if (await hasCloudRoar(id)) {
+      urlCache.set(id, cloudUrlFor(id));
+      return cloudUrlFor(id);
+    }
+  }
+
   // Otherwise fall back to a shipped file, which is what a phone will use.
   if (missingFiles.has(id)) return null;
   const path = filePathFor(id);
@@ -169,6 +178,11 @@ export async function listRoarIds(): Promise<string[]> {
     } else {
       misses++;
     }
+  }
+  // Roars the family recorded on other devices, via the cloud.
+  const { listCloudRoars } = await import('./roarCloud');
+  for (const id of await listCloudRoars()) {
+    if (!pool.includes(id)) pool.push(id);
   }
   return pool;
 }

@@ -1,0 +1,7 @@
+name = "abc-bear-roars"
+main = "index.js"
+compatibility_date = "2026-11-01"
+
+[[r2_buckets]]
+binding = "ROARS"
+bucket_name = "abc-bear-roars"
