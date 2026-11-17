@@ -248,16 +248,18 @@ button {
 .book__cover { font-size: 6rem; line-height: 1; }
 .book__pic { font-size: 5rem; line-height: 1; animation: pop .5s ease-out; }
 
-/* Generated page art */
+/* Generated page art: the picture IS the page - full width, top half of the
+   screen - with the words on clean cream below where small fingers slide. */
 .book__art {
-  width: min(62vw, 240px);
-  height: min(62vw, 240px);
+  width: 100%;
+  max-width: 480px;
+  height: 40vh;
   object-fit: cover;
   border-radius: 20px;
   box-shadow: 0 5px 0 var(--cream-deep);
   animation: pop .5s ease-out;
 }
-.book__art--big { width: min(70vw, 280px); height: min(70vw, 280px); }
+.book__art--big { height: 54vh; }
 
 /* A page is a row of word-sliders and sight chips */
 .book__line {
