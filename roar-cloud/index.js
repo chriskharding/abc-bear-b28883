@@ -28,19 +28,22 @@ export default {
     // GET /roars -> ["sfx:roar:extra:7", ...]
     if (request.method === 'GET' && url.pathname === '/roars') {
       const list = await env.ROARS.list({ prefix: `${FAMILY}/` });
-      const ids = list.objects.map((o) => o.key.slice(FAMILY.length + 1));
+      const ids = list.keys.map((k) => k.name.slice(FAMILY.length + 1));
       return Response.json(ids, { headers });
     }
 
     // GET /roar/<id> -> the audio
     if (request.method === 'GET' && url.pathname.startsWith('/roar/')) {
       const id = decodeURIComponent(url.pathname.slice('/roar/'.length));
-      const obj = await env.ROARS.get(`${FAMILY}/${id}`);
-      if (!obj) return new Response('not found', { status: 404, headers });
-      return new Response(obj.body, {
+      const { value, metadata } = await env.ROARS.getWithMetadata(
+        `${FAMILY}/${id}`,
+        { type: 'arrayBuffer' },
+      );
+      if (!value) return new Response('not found', { status: 404, headers });
+      return new Response(value, {
         headers: {
           ...headers,
-          'content-type': obj.httpMetadata?.contentType ?? 'audio/wav',
+          'content-type': metadata?.type ?? 'audio/wav',
           'cache-control': 'public, max-age=300',
         },
       });
@@ -60,7 +63,7 @@ export default {
         return new Response('too big', { status: 413, headers });
       }
       await env.ROARS.put(`${FAMILY}/${id}`, body, {
-        httpMetadata: { contentType: request.headers.get('content-type') ?? 'audio/wav' },
+        metadata: { type: request.headers.get('content-type') ?? 'audio/wav' },
       });
       return Response.json({ ok: true }, { headers });
     }

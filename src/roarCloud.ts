@@ -2,7 +2,7 @@
 // device uploads here and appears in the library on every device. Fully
 // disabled while BASE is empty - set it to the deployed Worker URL.
 
-export const BASE = ''; // e.g. 'https://abc-bear-roars.<account>.workers.dev'
+export const BASE = 'https://abc-bear-roars.harding-medical-institute.workers.dev';
 /** Upload key. Baked into the client on purpose: the only thing it protects
  *  is a toddler's roar bucket, and the alternative is a sign-in screen. */
 const KEY = 'roar-with-us';

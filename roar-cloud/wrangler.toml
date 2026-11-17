@@ -2,6 +2,6 @@ name = "abc-bear-roars"
 main = "index.js"
 compatibility_date = "2026-11-01"
 
-[[r2_buckets]]
+[[kv_namespaces]]
 binding = "ROARS"
-bucket_name = "abc-bear-roars"
+id = "b52217f3cd3a4973a1c1fcf6f7d466b7"
