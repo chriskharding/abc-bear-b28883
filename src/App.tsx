@@ -6,6 +6,7 @@ import { playClip, stopAll, clipDuration, unlockPlayer, listRoarIds } from './au
 import { OFFER_IDS } from './clips';
 import { FRUITS } from './fruits';
 import { recordLetterAnswer, recordSession, recordWordRead } from './stats';
+import { PICTURES } from './pictures';
 import { BlendStrip } from './BlendStrip';
 import { Recorder } from './Recorder';
 import { RoarBoard } from './RoarBoard';
@@ -367,6 +368,8 @@ function WordRound({
   onRead: () => void;
 }) {
   const [reading, setReading] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const picture = PICTURES[word];
 
   // Spoken instruction here too - the text below is for the parent.
   useEffect(() => {
@@ -378,22 +381,32 @@ function WordRound({
   }, []);
 
   /** He got all the way across. Say the word back whole - hearing the sounds
-   *  he just stretched snap together is the moment the blend lands. */
+   *  he just stretched snap together is the moment the blend lands - and if
+   *  the word has a picture, it pops in: reading becomes meaning. */
   const finish = async () => {
     if (locked || reading) return;
     setReading(true);
     setMood('think');
     recordWordRead(word);
     await wait(220);
+    if (picture) setRevealed(true);
     await play(`word:${word}`, () => say(word, { rate: 0.75 }), 900);
+    if (picture) await wait(600); // a beat to look at what he just read
     setReading(false);
     onRead();
   };
 
   return (
     <div className="screen">
-      <Bear mood={mood} size={150} />
-      <p className="prompt">Slide your finger across.</p>
+      <Bear mood={mood} size={revealed ? 110 : 150} />
+      {revealed && picture ? (
+        <div className="word-reveal">
+          <span className="word-reveal__pic">{picture}</span>
+          <span className="word-reveal__word">{word}</span>
+        </div>
+      ) : (
+        <p className="prompt">Slide your finger across.</p>
+      )}
       <BlendStrip word={word} disabled={locked || reading} onComplete={finish} />
     </div>
   );

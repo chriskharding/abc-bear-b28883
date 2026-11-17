@@ -225,6 +225,22 @@ button {
   outline-offset: -4px;
 }
 
+/* ---- Word picture reveal ---- */
+
+.word-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: pop .5s ease-out;
+}
+.word-reveal__pic { font-size: 4.2rem; line-height: 1.1; }
+.word-reveal__word {
+  font-size: 1.6rem;
+  color: var(--green);
+  letter-spacing: 2px;
+}
+
 /* ---- Blend strip (drag to sound out) ---- */
 
 .blend { display: flex; flex-direction: column; align-items: center; gap: 14px; }
