@@ -45,4 +45,12 @@ export const FRUITS: Fruit[] = [
     render: () => <BerryCluster body="#3D2B4F" shine="#6E548C" />,
   },
   { name: 'apples', one: 'apple', render: () => '🍎' },
+  { name: 'strawberries', one: 'strawberry', render: () => '🍓' },
+  { name: 'oranges', one: 'orange', render: () => '🍊' },
+  { name: 'grapes', one: 'grape', render: () => '🍇' },
+  { name: 'cherries', one: 'cherry', render: () => '🍒' },
+  { name: 'watermelons', one: 'watermelon', render: () => '🍉' },
 ];
+
+/** Plural + singular name pairs, for generating per-fruit voice lines. */
+export const FRUIT_NAMES = FRUITS.map((f) => ({ name: f.name, one: f.one }));

@@ -5,7 +5,7 @@
 // trails at the end as a bonus. A recording session can stop at any point and
 // what's already done is immediately live.
 
-import { SET_ONE, SET_TWO, SET_ONE_WORDS, SET_TWO_WORDS } from './curriculum';
+import { SET_ONE, SET_TWO, SET_ONE_WORDS, SET_TWO_WORDS, BLEND_WORDS } from './curriculum';
 
 export type Clip = {
   id: string;
@@ -333,6 +333,50 @@ for (const [a, b] of ADDITION_COMBOS) {
     label: `${a} plus ${b} is ${a + b}!`,
     direction: 'One natural sentence, triumphant at the end.',
     group: 'Math sentences',
+    essential: false,
+  });
+}
+
+// Phase 3a: the four-letter blend and plural words.
+for (const w of BLEND_WORDS) {
+  CLIPS.push({
+    id: `word:${w}`,
+    label: w,
+    direction: 'The whole word, normal speed, warm. Say it the way you would to him.',
+    group: 'Words — Blends',
+    essential: false,
+  });
+}
+
+// Per-fruit voice lines, so the bear names what's actually on screen. The
+// generic lines below stay as the fallback for any fruit not yet recorded.
+import { FRUIT_NAMES } from './fruits';
+for (const f of FRUIT_NAMES) {
+  CLIPS.push({
+    id: `fruit:offer:${f.name}`,
+    label: `I'm SO tired… can you feed me some ${f.name}?`,
+    direction: 'Sleepy, hopeful. Same energy as the blueberry offer.',
+    group: 'Fruits',
+    essential: false,
+  });
+  CLIPS.push({
+    id: `fruit:howmany:${f.name}`,
+    label: `How many ${f.name} did we get?`,
+    direction: 'Curious and warm - digit buttons appear while it plays.',
+    group: 'Fruits',
+    essential: false,
+  });
+}
+
+// Counting by tens, for the basket game (Chanelle's): crates of 10 fruits,
+// tapped and counted ten-twenty-thirty.
+for (let n = 1; n <= 10; n++) {
+  CLIPS.push({
+    id: `count10:${n * 10}`,
+    label: ['Ten!', 'Twenty!', 'Thirty!', 'Forty!', 'Fifty!', 'Sixty!',
+      'Seventy!', 'Eighty!', 'Ninety!', 'One hundred!'][n - 1],
+    direction: 'Excited skip-counting - bigger energy as the numbers grow.',
+    group: 'Counting',
     essential: false,
   });
 }

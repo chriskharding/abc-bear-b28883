@@ -457,9 +457,11 @@ function DoneScreen({
    *  bear doesn't ask for blueberries over a pile of bananas. */
   const offerSpeech = async () => {
     const shuffledOffers = [...OFFER_IDS].sort(() => Math.random() - 0.5);
+    // Best first: the line naming this exact fruit, then the neutral line,
+    // then the legacy blueberry offers (for blueberries those ARE exact).
     const ids = fruit.name === 'blueberries'
-      ? shuffledOffers
-      : ['phrase:offer-snack', ...shuffledOffers];
+      ? [...shuffledOffers, `fruit:offer:${fruit.name}`]
+      : [`fruit:offer:${fruit.name}`, 'phrase:offer-snack', ...shuffledOffers];
     for (const id of ids) {
       if (await playClip(id)) return;
     }
@@ -470,8 +472,8 @@ function DoneScreen({
   /** Fruit-aware "how many did we get?" with layered fallbacks. */
   const askHowMany = async () => {
     const ids = fruit.name === 'blueberries'
-      ? ['math:how-many']
-      : ['math:how-many-generic', 'math:how-many'];
+      ? ['math:how-many', `fruit:howmany:${fruit.name}`]
+      : [`fruit:howmany:${fruit.name}`, 'math:how-many-generic', 'math:how-many'];
     for (const id of ids) {
       if (await playClip(id)) return;
     }

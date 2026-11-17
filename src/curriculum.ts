@@ -61,6 +61,17 @@ export const SET_TWO_WORDS = [
   'am', 'an', 'at', 'in', 'it', 'on',
 ];
 
+/** Phase 3a: four-letter words from the same 12 letters - consonant blends
+ *  (spin, stop) and voiceless plural-s (cats, tops; voiced plurals like
+ *  "dogs", where s says /z/, are deliberately left out). Not yet dealt into
+ *  sessions - recordings come first, gameplay wiring after. */
+export const BLEND_WORDS = [
+  'and', 'ant', 'spin', 'snap', 'snip', 'stop', 'spot', 'spit',
+  'skip', 'skin', 'scan', 'mist', 'camp', 'damp', 'gasp', 'past',
+  'pond', 'pant', 'cats', 'tops', 'caps', 'naps', 'pots', 'maps',
+  'mats', 'pits',
+];
+
 export const soundFor = (letter: string): Sound =>
   SET_ONE.find((s) => s.letter === letter)!;
 
