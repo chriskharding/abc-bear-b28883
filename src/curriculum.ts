@@ -110,6 +110,28 @@ export const SET_FOUR_WORDS = [
   'zip', 'zap', 'zig', 'zag',
 ];
 
+/** The book-building bank: four-letter words using the full alphabet
+ *  (Sets 1-4), start-blends and end-blends, all short vowels, all honestly
+ *  spelled - no digraphs, no doubled letters, nothing irregular. These are
+ *  the nouns and verbs the first decodable books get written from. Join
+ *  gameplay when Sets 3-4 do. */
+export const BLEND_WORDS_2 = [
+  // start blends
+  'frog', 'crab', 'drum', 'drip', 'drop', 'drag', 'trip', 'trap',
+  'grin', 'grab', 'grip', 'brag', 'plum', 'plan', 'plus', 'clap',
+  'clip', 'club', 'clam', 'flag', 'flip', 'flat', 'flop', 'glad',
+  'slip', 'slam', 'sled', 'slug', 'slot', 'snug', 'swim', 'twin',
+  'stem', 'step', 'spun', 'stun',
+  // end blends
+  'nest', 'best', 'rest', 'fast', 'last', 'lost', 'list', 'fist',
+  'must', 'just', 'dust', 'hand', 'land', 'sand', 'band', 'bend',
+  'send', 'mend', 'tent', 'went', 'bent', 'sent', 'hunt', 'mint',
+  'soft', 'left', 'gift', 'lift', 'raft', 'desk', 'dusk', 'task',
+  'help', 'belt', 'felt', 'melt', 'milk', 'lamp', 'limp', 'jump',
+  'bump', 'dump', 'pump', 'lump', 'ramp', 'vest', 'west', 'pest',
+  'next',
+];
+
 /** Phase 3a: four-letter words from the same 12 letters - consonant blends
  *  (spin, stop) and voiceless plural-s (cats, tops; voiced plurals like
  *  "dogs", where s says /z/, are deliberately left out). Not yet dealt into

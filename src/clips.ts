@@ -7,7 +7,8 @@
 
 import {
   SET_ONE, SET_TWO, SET_THREE, SET_FOUR,
-  SET_ONE_WORDS, SET_TWO_WORDS, SET_THREE_WORDS, SET_FOUR_WORDS, BLEND_WORDS,
+  SET_ONE_WORDS, SET_TWO_WORDS, SET_THREE_WORDS, SET_FOUR_WORDS,
+  BLEND_WORDS, BLEND_WORDS_2,
 } from './curriculum';
 
 export type Clip = {
@@ -374,6 +375,17 @@ for (const w of BLEND_WORDS) {
     label: w,
     direction: 'The whole word, normal speed, warm. Say it the way you would to him.',
     group: 'Words — Blends',
+    essential: false,
+  });
+}
+
+// The book-building bank: full-alphabet four-letter words.
+for (const w of BLEND_WORDS_2) {
+  CLIPS.push({
+    id: `word:${w}`,
+    label: w,
+    direction: 'The whole word, normal speed, warm. Say it the way you would to him.',
+    group: 'Words — Book Bank',
     essential: false,
   });
 }
