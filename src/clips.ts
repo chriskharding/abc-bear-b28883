@@ -379,6 +379,69 @@ for (const w of BLEND_WORDS) {
   });
 }
 
+// Books: tricky words (sentence glue, learned whole) + every page read as a
+// natural storytime sentence + each title.
+import { BOOKS, TRICKY_WORDS, pageClipId, titleClipId } from './books';
+for (const w of TRICKY_WORDS) {
+  CLIPS.push({
+    id: `word:${w}`,
+    label: w === 'i' ? 'I' : w,
+    direction: 'A tricky word - said whole, warm and clear. These glue sentences together.',
+    group: 'Tricky words',
+    essential: false,
+  });
+}
+for (const b of BOOKS) {
+  CLIPS.push({
+    id: titleClipId(b.id),
+    label: `${b.title} (title)`,
+    direction: 'Announce the title like story time is starting.',
+    group: `Book: ${b.title}`,
+    essential: false,
+  });
+  b.pages.forEach((p, i) => {
+    CLIPS.push({
+      id: pageClipId(b.id, i),
+      label: p.text,
+      direction: 'Read the whole sentence naturally - storytime voice, unhurried.',
+      group: `Book: ${b.title}`,
+      essential: false,
+    });
+  });
+}
+
+// Digraphs - recorded ahead of the sound-tile engine. (ck reuses the k sound,
+// so it needs no clip of its own.)
+for (const d of [
+  { id: 'sh', dir: 'The sound "shhh", as in "ship". HOLD IT, steady - it stretches.' },
+  { id: 'ch', dir: 'The sound "ch", as in "chip". One short burst.' },
+  { id: 'th', dir: 'The sound "th", as in "bath" - tongue between teeth, unvoiced. Holdable.' },
+  { id: 'ng', dir: 'The sound "ng", as in "ring". Holdable hum.' },
+]) {
+  CLIPS.push({
+    id: `phoneme:${d.id}`,
+    label: d.id,
+    direction: d.dir,
+    group: 'Sounds — Digraphs',
+    essential: false,
+  });
+}
+for (const w of [
+  'ship', 'shop', 'shut', 'shed', 'fish', 'dish', 'wish', 'rush', 'mash', 'cash',
+  'chip', 'chat', 'chin', 'chop', 'much', 'such', 'rich',
+  'thin', 'thud', 'moth', 'bath', 'path',
+  'duck', 'sock', 'kick', 'pack', 'neck', 'rock', 'lick', 'lock', 'sick', 'pick',
+  'ring', 'king', 'song', 'long', 'sing', 'wing', 'hang', 'bang',
+]) {
+  CLIPS.push({
+    id: `word:${w}`,
+    label: w,
+    direction: 'The whole word, normal speed, warm.',
+    group: 'Words — Digraphs',
+    essential: false,
+  });
+}
+
 // qu - recorded as one sound so the alphabet board has a working Q tile.
 CLIPS.push({
   id: 'phoneme:qu',

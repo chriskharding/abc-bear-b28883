@@ -4,11 +4,26 @@
 
 import { loadStats } from './stats';
 import { ALL_SOUNDS } from './curriculum';
+import { BOOKS } from './books';
 
 export function ParentPage({ onExit, onRecorder }: { onExit: () => void; onRecorder: () => void }) {
   const stats = loadStats();
   const words = Object.entries(stats.words).sort((a, b) => b[1] - a[1]);
   const totalReads = words.reduce((sum, [, n]) => sum + n, 0);
+  const booksFinished = Object.values(stats.books ?? {}).reduce((a, b) => a + b, 0);
+
+  // Needs practice: letters he misses a third of the time (3+ tries), and
+  // words with more try-agains than successes.
+  const shakyLetters = ALL_SOUNDS
+    .map((s) => ({ letter: s.letter, rw: stats.letters[s.letter] ?? [0, 0] as [number, number] }))
+    .filter(({ rw: [r, w] }) => r + w >= 3 && w / (r + w) >= 0.34)
+    .map((x) => x.letter);
+  const shakyWords = [...new Set([
+    ...Object.keys(stats.words), ...Object.keys(stats.wordMisses ?? {}),
+  ])]
+    .map((w) => ({ w, ok: stats.words[w] ?? 0, miss: (stats.wordMisses ?? {})[w] ?? 0 }))
+    .filter((x) => x.miss > x.ok && x.miss >= 2)
+    .map((x) => x.w);
 
   const letterRows = ALL_SOUNDS.map((s) => {
     const [right, wrong] = stats.letters[s.letter] ?? [0, 0];
@@ -23,7 +38,7 @@ export function ParentPage({ onExit, onRecorder }: { onExit: () => void; onRecor
         <button className="quiet-btn" onClick={onRecorder}>recording studio →</button>
       </div>
 
-      <h2 className="rec__label">Progress</h2>
+      <h2 className="rec__label">Report Card</h2>
       <p className="rec__direction">
         {stats.sessions} session{stats.sessions === 1 ? '' : 's'} finished
         {stats.lastPlayed ? ` · last played ${new Date(stats.lastPlayed).toLocaleDateString()}` : ''}.
@@ -39,7 +54,35 @@ export function ParentPage({ onExit, onRecorder }: { onExit: () => void; onRecor
           <span className="parent__num">{totalReads}</span>
           <span className="parent__cap">words read in total</span>
         </div>
+        <div className="parent__stat">
+          <span className="parent__num">{booksFinished}</span>
+          <span className="parent__cap">books finished</span>
+        </div>
       </div>
+
+      {(shakyLetters.length > 0 || shakyWords.length > 0) && (
+        <>
+          <p className="lib__group" style={{ color: 'var(--accent-dark)' }}>needs practice</p>
+          <p className="rec__direction">
+            {shakyLetters.length > 0 && <>Letters: <b>{shakyLetters.join(', ')}</b>. </>}
+            {shakyWords.length > 0 && <>Words: <b>{shakyWords.join(', ')}</b>.</>}
+          </p>
+        </>
+      )}
+
+      {booksFinished > 0 && (
+        <>
+          <p className="lib__group">books</p>
+          <div className="lib parent__table">
+            {BOOKS.filter((b) => (stats.books ?? {})[b.id]).map((b) => (
+              <div key={b.id} className="lib__row">
+                <span className="parent__letter">{b.cover} {b.title}</span>
+                <span className="parent__pct">finished {(stats.books ?? {})[b.id]}×</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <p className="lib__group">letters — how often he gets each one right</p>
       <div className="lib parent__table">
@@ -67,7 +110,9 @@ export function ParentPage({ onExit, onRecorder }: { onExit: () => void; onRecor
         {words.map(([w, n]) => (
           <div key={w} className="lib__row">
             <span className="parent__letter">{w}</span>
-            <span className="parent__pct">{n}×</span>
+            <span className="parent__pct">
+              {n}✓{(stats.wordMisses ?? {})[w] ? ` ${(stats.wordMisses ?? {})[w]}✗` : ''}
+            </span>
           </div>
         ))}
       </div>

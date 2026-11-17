@@ -5,8 +5,12 @@
 export type Stats = {
   /** word -> times read successfully via the blend strip */
   words: Record<string, number>;
+  /** word -> times the slide was abandoned/reset (the try-agains) */
+  wordMisses: Record<string, number>;
   /** letter -> [right, wrong] across sound rounds */
   letters: Record<string, [number, number]>;
+  /** book id -> times finished */
+  books: Record<string, number>;
   sessions: number;
   /** ISO date of last play, for the parent page header */
   lastPlayed: string | null;
@@ -14,7 +18,9 @@ export type Stats = {
 
 const KEY = 'abc-bear-stats';
 
-const empty = (): Stats => ({ words: {}, letters: {}, sessions: 0, lastPlayed: null });
+const empty = (): Stats => ({
+  words: {}, wordMisses: {}, letters: {}, books: {}, sessions: 0, lastPlayed: null,
+});
 
 export function loadStats(): Stats {
   try {
@@ -46,3 +52,9 @@ export const recordLetterAnswer = (letter: string, right: boolean) =>
   });
 
 export const recordSession = () => save((s) => { s.sessions += 1; });
+
+export const recordWordMiss = (word: string) =>
+  save((s) => { s.wordMisses[word] = (s.wordMisses[word] ?? 0) + 1; });
+
+export const recordBookFinished = (bookId: string) =>
+  save((s) => { s.books[bookId] = (s.books[bookId] ?? 0) + 1; });

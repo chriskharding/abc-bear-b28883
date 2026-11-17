@@ -225,6 +225,47 @@ button {
   outline-offset: -4px;
 }
 
+/* ---- Books ---- */
+
+.shelf { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+
+.shelf__book {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 120px;
+  padding: 16px 10px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 5px 0 var(--cream-deep);
+}
+.shelf__book:active { transform: translateY(3px); }
+.shelf__cover { font-size: 3rem; line-height: 1; }
+.shelf__title { font-size: .9rem; color: var(--brown); text-align: center; }
+.shelf__star { font-size: .8rem; color: var(--brown-soft); }
+
+.book__cover { font-size: 6rem; line-height: 1; }
+.book__pic { font-size: 5rem; line-height: 1; animation: pop .5s ease-out; }
+
+.book__text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 420px;
+}
+.book__word {
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-family: var(--letter-font);
+  font-size: 1.5rem;
+  color: var(--brown);
+  box-shadow: 0 3px 0 var(--cream-deep);
+}
+.book__word:active { transform: translateY(2px); color: var(--green); }
+
 /* ---- Word picture reveal ---- */
 
 .word-reveal {

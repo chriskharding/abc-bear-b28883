@@ -11,9 +11,11 @@ import { BlendStrip } from './BlendStrip';
 import { Recorder } from './Recorder';
 import { RoarBoard } from './RoarBoard';
 import { AbcBoard } from './AbcBoard';
+import { BookShelf, BookReader } from './BookReader';
+import type { Book } from './books';
 import { ParentPage } from './ParentPage';
 
-type Phase = 'start' | 'play' | 'done' | 'record' | 'roars' | 'abc' | 'parent';
+type Phase = 'start' | 'play' | 'done' | 'record' | 'roars' | 'abc' | 'shelf' | 'parent';
 
 const TOKEN_KEY = 'abc-bear-roar-tokens';
 const MAX_TOKENS = 10;
@@ -65,6 +67,7 @@ export default function App() {
   const [locked, setLocked] = useState(false);
   /** The 3-2-1 of the start ritual; null when not counting. */
   const [count, setCount] = useState<number | null>(null);
+  const [openBook, setOpenBook] = useState<Book | null>(null);
   /** Soundboard currency: roar plays cost one, finishing a session refills. */
   const [tokens, setTokens] = useState(loadTokens);
   const setTokensPersist = (n: number) => {
@@ -173,6 +176,11 @@ export default function App() {
             unlockPlayer();
             setPhase('abc');
           }}
+          onBooks={() => {
+            wakeAudio();
+            unlockPlayer();
+            setPhase('shelf');
+          }}
         />
       )}
 
@@ -181,6 +189,12 @@ export default function App() {
       )}
 
       {phase === 'abc' && <AbcBoard onBack={() => setPhase('start')} />}
+
+      {phase === 'shelf' && (openBook ? (
+        <BookReader book={openBook} onDone={() => setOpenBook(null)} />
+      ) : (
+        <BookShelf onBack={() => setPhase('start')} onOpen={setOpenBook} />
+      ))}
 
       {phase === 'roars' && (
         <RoarBoard
@@ -254,10 +268,10 @@ function useLongPress(onLongPress: () => void, ms = 900) {
 }
 
 function StartScreen({
-  mood, onStart, onSecret, onRoars, onAbc,
+  mood, onStart, onSecret, onRoars, onAbc, onBooks,
 }: {
   mood: Mood; onStart: () => void; onSecret: () => void;
-  onRoars: () => void; onAbc: () => void;
+  onRoars: () => void; onAbc: () => void; onBooks: () => void;
 }) {
   const press = useLongPress(onSecret);
   return (
@@ -272,6 +286,9 @@ function StartScreen({
         </button>
         <button className="roars-door" onClick={onAbc} aria-label="alphabet sounds">
           abc
+        </button>
+        <button className="roars-door" onClick={onBooks} aria-label="my books">
+          📚
         </button>
       </div>
       <p className="buildtag">{__BUILD__}</p>

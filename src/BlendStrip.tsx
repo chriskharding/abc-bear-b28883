@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { soundFor } from './curriculum';
 import { startPhoneme, stopPhoneme, preload, wakeSustain } from './sustain';
 import { playClip } from './audioBank';
+import { recordWordMiss } from './stats';
 import { say } from './audio';
 
 export function BlendStrip({
@@ -131,6 +132,7 @@ export function BlendStrip({
       touched.current = false;
       progressRef.current = 0;
       setProgress(0);
+      recordWordMiss(word); // the report card counts the try-agains too
       void playClip('phrase:try-again').then((ok) => {
         if (!ok) say('Try again.', { rate: 0.85 });
       });
