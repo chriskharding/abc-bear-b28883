@@ -379,6 +379,15 @@ for (const w of BLEND_WORDS) {
   });
 }
 
+// qu - recorded as one sound so the alphabet board has a working Q tile.
+CLIPS.push({
+  id: 'phoneme:qu',
+  label: 'qu',
+  direction: 'The sound "kw", as in "queen". One short burst.',
+  group: 'Sounds — Set 4',
+  essential: false,
+});
+
 // The book-building bank: full-alphabet four-letter words.
 for (const w of BLEND_WORDS_2) {
   CLIPS.push({

@@ -303,6 +303,31 @@ button {
   color: #DCC9A4;
 }
 
+.doors { display: flex; gap: 14px; }
+
+/* The alphabet press board */
+.abc__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+}
+.abc__tile {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--brown);
+  font-family: var(--letter-font);
+  font-size: clamp(1.8rem, 8vw, 2.6rem);
+  line-height: 1;
+  box-shadow: 0 4px 0 var(--cream-deep);
+  transition: transform .08s, background .12s, color .12s;
+}
+.abc__tile:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--cream-deep); }
+.abc__tile--active { background: var(--accent); color: #fff; transform: scale(1.06); }
+.abc__tile--off { opacity: .3; pointer-events: none; }
+
 .roars-door {
   background: #fff;
   font-size: 1.6rem;

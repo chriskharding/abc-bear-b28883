@@ -9,9 +9,10 @@ import { recordLetterAnswer, recordSession, recordWordRead } from './stats';
 import { BlendStrip } from './BlendStrip';
 import { Recorder } from './Recorder';
 import { RoarBoard } from './RoarBoard';
+import { AbcBoard } from './AbcBoard';
 import { ParentPage } from './ParentPage';
 
-type Phase = 'start' | 'play' | 'done' | 'record' | 'roars' | 'parent';
+type Phase = 'start' | 'play' | 'done' | 'record' | 'roars' | 'abc' | 'parent';
 
 const TOKEN_KEY = 'abc-bear-roar-tokens';
 const MAX_TOKENS = 10;
@@ -166,12 +167,19 @@ export default function App() {
             unlockPlayer();
             setPhase('roars');
           }}
+          onAbc={() => {
+            wakeAudio();
+            unlockPlayer();
+            setPhase('abc');
+          }}
         />
       )}
 
       {phase === 'parent' && (
         <ParentPage onExit={() => setPhase('start')} onRecorder={() => setPhase('record')} />
       )}
+
+      {phase === 'abc' && <AbcBoard onBack={() => setPhase('start')} />}
 
       {phase === 'roars' && (
         <RoarBoard
@@ -245,18 +253,26 @@ function useLongPress(onLongPress: () => void, ms = 900) {
 }
 
 function StartScreen({
-  mood, onStart, onSecret, onRoars,
-}: { mood: Mood; onStart: () => void; onSecret: () => void; onRoars: () => void }) {
+  mood, onStart, onSecret, onRoars, onAbc,
+}: {
+  mood: Mood; onStart: () => void; onSecret: () => void;
+  onRoars: () => void; onAbc: () => void;
+}) {
   const press = useLongPress(onSecret);
   return (
     <div className="screen screen--start">
       <h1 className="title" {...press}>ABC BEAR</h1>
       <Bear mood={mood} size={260} />
       <button className="big-btn" onClick={onStart}>I CAN READ!</button>
-      {/* The soundboard door: kid-findable but clearly second billing */}
-      <button className="roars-door" onClick={onRoars} aria-label="roar soundboard">
-        🐻🔊
-      </button>
+      {/* The side doors: kid-findable but clearly second billing */}
+      <div className="doors">
+        <button className="roars-door" onClick={onRoars} aria-label="roar soundboard">
+          🐻🔊
+        </button>
+        <button className="roars-door" onClick={onAbc} aria-label="alphabet sounds">
+          abc
+        </button>
+      </div>
       <p className="buildtag">{__BUILD__}</p>
     </div>
   );
