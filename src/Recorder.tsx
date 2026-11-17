@@ -66,6 +66,15 @@ export function Recorder({ onExit }: { onExit: () => void }) {
   ];
   const clip = allClips[Math.min(index, allClips.length - 1)];
   const hasAudio = (id: string) => done.has(id) || have.has(id);
+  // Fresh references for callbacks that outlive a render (MediaRecorder's
+  // onstop), so auto-advance judges recorded-ness by current state.
+  const advanceRef = useRef<(from: number) => number>(() => 0);
+  advanceRef.current = (from: number) => {
+    // Next clip that still NEEDS recording - skipping past recorded ones, so
+    // finishing a section never walks into re-recording old takes.
+    const next = allClips.findIndex((c, j) => j > from && !hasAudio(c.id));
+    return next >= 0 ? next : Math.min(allClips.length - 1, from + 1);
+  };
   const essentialDone = CLIPS.filter((c) => c.essential && hasAudio(c.id)).length;
 
   // Discover what exists: local takes, shipped files, and guest-roar slots.
@@ -235,7 +244,7 @@ export function Recorder({ onExit }: { onExit: () => void }) {
       setNewIds((s) => new Set(s).add(id));
       setBusy(false);
       if (autoAdvance && peak >= 0.08 && peak <= 0.99) {
-        setIndex((i) => Math.min(allClips.length - 1, i + 1));
+        setIndex((i) => advanceRef.current(i));
       }
     };
     rec.start();
