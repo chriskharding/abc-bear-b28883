@@ -1,8 +1,9 @@
-// The first decodable books. Every non-tricky word is one Charlie can sound
-// out with his current letters, and every word already has a recording - so
-// a page can speak word-by-word in family voices even before the whole
-// sentence is recorded. A recorded sentence clip (book:<id>:p<n>) upgrades a
-// page to natural storytime speech, same layering as the math.
+// The first decodable books. Rules: every non-tricky word is sound-out-able
+// and recorded; FOUR WORDS MAX per page (a beginner reads a breath at a
+// time); every page can show art - a generated image from
+// public/book-art/<bookId>-p<N>.png when present, its emoji otherwise.
+// Page audio: recorded whole sentence (book:<id>:p<n>) if it exists, else
+// word-by-word in family voices.
 
 export type BookPage = { text: string; pic?: string };
 export type Book = { id: string; title: string; cover: string; pages: BookPage[] };
@@ -15,10 +16,11 @@ export const BOOKS: Book[] = [
     pages: [
       { text: 'The sun is up.', pic: '☀️' },
       { text: 'It is hot.', pic: '🔥' },
-      { text: 'I run to the pond.', pic: '🏃' },
-      { text: 'A frog can jump.', pic: '🐸' },
+      { text: 'I run.', pic: '🏃' },
+      { text: 'A frog!', pic: '🐸' },
+      { text: 'It can jump.', pic: '🤸' },
       { text: 'I swim fast.', pic: '🏊' },
-      { text: 'The frog and I nap in the sun.', pic: '😴' },
+      { text: 'We nap.', pic: '😴' },
     ],
   },
   {
@@ -26,12 +28,14 @@ export const BOOKS: Book[] = [
     title: 'The Lost Egg',
     cover: '🥚',
     pages: [
-      { text: 'A hen sat on an egg.', pic: '🐔' },
+      { text: 'A hen sat.', pic: '🐔' },
       { text: 'The egg is lost!', pic: '🥚' },
-      { text: 'The fox got the egg?', pic: '🦊' },
-      { text: 'No! It is in the sand.', pic: '🏖️' },
-      { text: 'The hen can dig fast.', pic: '⛏️' },
-      { text: 'The hen got the egg. The end.', pic: '🐣' },
+      { text: 'The fox got it?', pic: '🦊' },
+      { text: 'No!', pic: '🙅' },
+      { text: 'In the sand!', pic: '🏖️' },
+      { text: 'The hen can dig.', pic: '⛏️' },
+      { text: 'The hen got it!', pic: '🐣' },
+      { text: 'The end.', pic: '💛' },
     ],
   },
   {
@@ -39,12 +43,13 @@ export const BOOKS: Book[] = [
     title: 'The Red Sled',
     cover: '🛷',
     pages: [
-      { text: 'I got a red sled.', pic: '🛷' },
-      { text: 'We go up, up, up.', pic: '⬆️' },
-      { text: 'We zip past the camp.', pic: '🏕️' },
-      { text: 'The sled hit a bump!', pic: '💥' },
+      { text: 'I got a sled.', pic: '🛷' },
+      { text: 'It is red.', pic: '🔴' },
+      { text: 'We go up, up.', pic: '⬆️' },
+      { text: 'We zip!', pic: '⚡' },
+      { text: 'A bump!', pic: '💥' },
       { text: 'We spin and spin.', pic: '💫' },
-      { text: 'I am glad. We go up and up.', pic: '😊' },
+      { text: 'I am glad.', pic: '😊' },
     ],
   },
 ];

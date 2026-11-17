@@ -1,21 +1,39 @@
-// The bookshelf and the book reader. A book page shows its picture and
-// sentence; tapping the page reads it aloud - the recorded whole sentence if
-// it exists, else word-by-word from the word clips (every word in every book
-// is chosen to have one). Tapping any single word says just that word.
-// Finishing a book roars, stars the cover on the shelf, and counts on the
+// The bookshelf and the book reader. A page is READ, not listened to: every
+// decodable word is its own mini slider (same drag-to-blend as the game) and
+// tricky words are tap-to-hear sight chips. When the last word on the page is
+// done, the recorded storytime sentence plays back whole - the reward for
+// reading it himself. Art: a generated image from
+// public/book-art/<bookId>-p<N>.png (or -cover.png) when present, the emoji
+// otherwise. Finishing a book roars, stars the cover, and counts on the
 // parent report card.
 
 import { useEffect, useRef, useState } from 'react';
 import { Bear, type Mood } from './Bear';
-import { BOOKS, pageClipId, titleClipId, type Book } from './books';
+import { BOOKS, TRICKY_WORDS, pageClipId, titleClipId, type Book } from './books';
 import { playClip } from './audioBank';
 import { recordBookFinished, loadStats } from './stats';
+import { BlendStrip } from './BlendStrip';
 
-const wordId = (w: string) => `word:${w.toLowerCase().replace(/[^a-z]/g, '')}`;
+const clean = (w: string) => w.toLowerCase().replace(/[^a-z]/g, '');
+const wordId = (w: string) => `word:${clean(w)}`;
 
-/** Sentence -> speakable word ids, punctuation dropped. */
-const pageWords = (text: string) =>
-  text.split(/\s+/).map((w) => w.toLowerCase().replace(/[^a-z]/g, '')).filter(Boolean);
+const artBase = `${import.meta.env.BASE_URL}book-art/`;
+
+/** Generated art with emoji fallback. */
+function PageArt({ file, emoji, big }: { file: string; emoji?: string; big?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !file) {
+    return emoji ? <div className={big ? 'book__cover' : 'book__pic'}>{emoji}</div> : null;
+  }
+  return (
+    <img
+      className={big ? 'book__art book__art--big' : 'book__art'}
+      src={`${artBase}${file}`}
+      alt=""
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export function BookShelf({ onBack, onOpen }: { onBack: () => void; onOpen: (b: Book) => void }) {
   const finished = loadStats().books ?? {};
@@ -43,9 +61,9 @@ export function BookReader({
 }: { book: Book; onDone: () => void }) {
   const [page, setPage] = useState(-1); // -1 = cover
   const [mood, setMood] = useState<Mood>('calm');
-  /** Bumped on every interruption (page turn, word tap, finish) so an
-   *  in-flight word-by-word read stops instead of talking over the future.
-   *  Taps always win - a reading never blocks the buttons. */
+  /** Which word slots on this page have been read. */
+  const [done, setDone] = useState<Set<number>>(new Set());
+  const [pageDone, setPageDone] = useState(false);
   const seq = useRef(0);
 
   // The cover announces the title once on open.
@@ -55,14 +73,32 @@ export function BookReader({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const readPage = async (i: number) => {
-    if (i < 0) return;
+  const cur = page >= 0 ? book.pages[page] : null;
+  const words = cur ? cur.text.split(/\s+/) : [];
+
+  /** A word slot finished (slid, or sight-chip tapped): say the word, and if
+   *  it was the last one, the whole sentence comes back in storytime voice. */
+  const wordFinished = async (idx: number) => {
+    const my = ++seq.current;
+    await playClip(wordId(words[idx]));
+    const next = new Set(done).add(idx);
+    setDone(next);
+    if (next.size === words.length && !pageDone) {
+      setPageDone(true);
+      if (seq.current !== my) return;
+      setMood('think');
+      await playClip(pageClipId(book.id, page));
+      setMood('calm');
+    }
+  };
+
+  /** Replay the page: recorded sentence, else word-by-word. */
+  const readPage = async () => {
     const my = ++seq.current;
     setMood('think');
-    // Whole recorded sentence first; else word-by-word in family voices.
-    if (!(await playClip(pageClipId(book.id, i)))) {
-      for (const w of pageWords(book.pages[i].text)) {
-        if (seq.current !== my) return; // something interrupted - stop talking
+    if (!(await playClip(pageClipId(book.id, page)))) {
+      for (const w of words) {
+        if (seq.current !== my) return;
         await playClip(wordId(w));
         if (seq.current !== my) return;
         await new Promise((r) => setTimeout(r, 160));
@@ -71,15 +107,9 @@ export function BookReader({
     if (seq.current === my) setMood('calm');
   };
 
-  const sayWord = async (w: string) => {
-    seq.current++;
-    await playClip(wordId(w));
-  };
-
   const next = async () => {
     seq.current++;
     if (page >= book.pages.length - 1) {
-      // The end: roar, star the cover, back to the shelf.
       recordBookFinished(book.id);
       setMood('roar');
       await playClip('sfx:roar:1');
@@ -89,10 +119,9 @@ export function BookReader({
     }
     const n = page + 1;
     setPage(n);
-    void readPage(n);
+    setDone(new Set());
+    setPageDone(false);
   };
-
-  const cur = page >= 0 ? book.pages[page] : null;
 
   return (
     <div className="screen roars">
@@ -105,29 +134,54 @@ export function BookReader({
 
       {page < 0 ? (
         <>
-          <div className="book__cover">{book.cover}</div>
+          <PageArt file={`${book.id}-cover.png`} emoji={book.cover} big />
           <h2 className="title title--sm">{book.title}</h2>
-          <Bear mood={mood} size={120} />
+          <Bear mood={mood} size={110} />
         </>
       ) : (
         <>
-          {cur?.pic && <div className="book__pic">{cur.pic}</div>}
-          {/* Each word is its own button: tap a word to hear just it, tap the
-              speaker to hear the page. */}
-          <div className="book__text">
-            {cur?.text.split(/\s+/).map((w, k) => (
-              <button key={k} className="book__word" onClick={() => sayWord(w)}>
-                {w}
-              </button>
-            ))}
+          <PageArt file={`${book.id}-p${page + 1}.png`} emoji={cur?.pic} />
+          {/* He reads the page: sliders for decodable words, sight chips for
+              tricky ones. Completing them all earns the storytime read-back. */}
+          <div className="book__line">
+            {words.map((w, i) => {
+              const c = clean(w);
+              const isDone = done.has(i);
+              if (TRICKY_WORDS.includes(c)) {
+                return (
+                  <button
+                    key={`${page}-${i}`}
+                    className={`sight-chip ${isDone ? 'sight-chip--done' : ''}`}
+                    onClick={() => !isDone && wordFinished(i)}
+                  >
+                    {w}
+                  </button>
+                );
+              }
+              return (
+                <div key={`${page}-${i}`} className={`blend--mini ${isDone ? 'blend--mini-done' : ''}`}>
+                  <BlendStrip
+                    word={c}
+                    disabled={isDone}
+                    onComplete={() => wordFinished(i)}
+                  />
+                </div>
+              );
+            })}
           </div>
-          <button className="hear-btn" onClick={() => readPage(page)} aria-label="read the page">
-            🔊<span className="hear-btn__badge" aria-hidden="true">↻</span>
-          </button>
+          {pageDone && (
+            <button className="hear-btn" onClick={readPage} aria-label="read the page again">
+              🔊<span className="hear-btn__badge" aria-hidden="true">↻</span>
+            </button>
+          )}
         </>
       )}
 
-      <button className="big-btn" onClick={next}>
+      <button
+        className={`big-btn ${page >= 0 && !pageDone ? 'big-btn--off' : ''}`}
+        onClick={next}
+        disabled={page >= 0 && !pageDone}
+      >
         {page < 0 ? 'READ!' : page >= book.pages.length - 1 ? 'THE END!' : 'NEXT →'}
       </button>
     </div>

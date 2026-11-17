@@ -248,6 +248,51 @@ button {
 .book__cover { font-size: 6rem; line-height: 1; }
 .book__pic { font-size: 5rem; line-height: 1; animation: pop .5s ease-out; }
 
+/* Generated page art */
+.book__art {
+  width: min(62vw, 240px);
+  height: min(62vw, 240px);
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: 0 5px 0 var(--cream-deep);
+  animation: pop .5s ease-out;
+}
+.book__art--big { width: min(70vw, 280px); height: min(70vw, 280px); }
+
+/* A page is a row of word-sliders and sight chips */
+.book__line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  max-width: 460px;
+}
+
+.blend--mini .blend__strip { padding: 5px; gap: 4px; border-radius: 16px; }
+.blend--mini .blend__cell {
+  width: clamp(32px, 8.5vw, 42px);
+  height: clamp(42px, 11vw, 54px);
+  border-radius: 10px;
+  font-size: clamp(1.3rem, 5.5vw, 1.8rem);
+}
+.blend--mini .blend__cell--next { outline-width: 3px; }
+.blend--mini .blend__hint { display: none; }
+.blend--mini-done { opacity: .75; }
+
+/* Tricky words: learned whole, so they look whole - a soft pill, no tiles */
+.sight-chip {
+  background: #F0E6FA;
+  color: #6B4FA0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-family: var(--letter-font);
+  font-size: 1.5rem;
+  box-shadow: 0 3px 0 #D9C8F0;
+}
+.sight-chip:active { transform: translateY(2px); }
+.sight-chip--done { background: #EAF6EC; color: var(--green); box-shadow: 0 3px 0 #CDE8D3; }
+
 .book__text {
   display: flex;
   flex-wrap: wrap;
