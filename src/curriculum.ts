@@ -37,7 +37,33 @@ export const SET_TWO: Sound[] = [
   { letter: 'k', say: 'kuh', keyword: 'kite', continuant: false },
 ];
 
-export const ALL_SOUNDS = [...SET_ONE, ...SET_TWO];
+/** Set 3 and 4: the rest of the single letters, in standard phonics order.
+ *  (qu and the digraphs - sh, ch, th, ck, ng - wait for the sound-tile
+ *  engine; they're two letters, one sound.) */
+export const SET_THREE: Sound[] = [
+  { letter: 'e', say: 'eh', keyword: 'egg', continuant: true },
+  { letter: 'u', say: 'uh', keyword: 'umbrella', continuant: true },
+  { letter: 'r', say: 'rrr', keyword: 'rabbit', continuant: true },
+  { letter: 'h', say: 'hh', keyword: 'hat', continuant: false },
+  { letter: 'b', say: 'buh', keyword: 'ball', continuant: false },
+  { letter: 'f', say: 'fff', keyword: 'fish', continuant: true },
+  { letter: 'l', say: 'lll', keyword: 'leg', continuant: true },
+];
+
+export const SET_FOUR: Sound[] = [
+  { letter: 'j', say: 'juh', keyword: 'jam', continuant: false },
+  { letter: 'v', say: 'vvv', keyword: 'van', continuant: true },
+  { letter: 'w', say: 'wuh', keyword: 'water', continuant: false },
+  { letter: 'x', say: 'ks', keyword: 'box', continuant: false },
+  { letter: 'y', say: 'yuh', keyword: 'yes', continuant: false },
+  { letter: 'z', say: 'zzz', keyword: 'zebra', continuant: true },
+];
+
+export const ALL_SOUNDS = [...SET_ONE, ...SET_TWO, ...SET_THREE, ...SET_FOUR];
+
+/** The sounds gameplay may deal. Sets 3-4 join the moment their recordings
+ *  land - until then a prompt for them would be silent (no robot voices). */
+export const PLAYABLE_SOUNDS = [...SET_ONE, ...SET_TWO];
 
 /** Every word buildable from Set 1. All decodable - nothing here has to be
  *  memorised, he can sound out all of it. */
@@ -61,6 +87,29 @@ export const SET_TWO_WORDS = [
   'am', 'an', 'at', 'in', 'it', 'on',
 ];
 
+/** Words unlocked by Sets 3 and 4 - short-vowel, honestly spelled, all
+ *  picturable or known to a four-year-old. These join gameplay when their
+ *  letters do. */
+export const SET_THREE_WORDS = [
+  'red', 'run', 'rub', 'rat', 'rug', 'rip',
+  'hen', 'hat', 'hit', 'hug', 'hot', 'hop', 'him', 'hum',
+  'bed', 'bat', 'bin', 'bus', 'big', 'bug', 'bun', 'bad', 'bit',
+  'fun', 'fit', 'fan', 'fed', 'fig',
+  'leg', 'let', 'lap', 'lot', 'lip', 'log', 'lid',
+  'egg', 'elf', 'end',
+  'up', 'us', 'cup', 'cut', 'mud', 'nut', 'sun', 'gum', 'but',
+  'pet', 'pen', 'ten', 'net', 'men', 'get', 'set', 'bet',
+];
+
+export const SET_FOUR_WORDS = [
+  'jet', 'jam', 'jog', 'jab', 'jig', 'job', 'jug',
+  'vet', 'van',
+  'wet', 'win', 'web', 'wig', 'wag',
+  'box', 'fix', 'mix', 'six', 'fox', 'wax',
+  'yes', 'yet', 'yum', 'yak', 'yap',
+  'zip', 'zap', 'zig', 'zag',
+];
+
 /** Phase 3a: four-letter words from the same 12 letters - consonant blends
  *  (spin, stop) and voiceless plural-s (cats, tops; voiced plurals like
  *  "dogs", where s says /z/, are deliberately left out). Not yet dealt into
@@ -73,7 +122,11 @@ export const BLEND_WORDS = [
 ];
 
 export const soundFor = (letter: string): Sound =>
-  SET_ONE.find((s) => s.letter === letter)!;
+  ALL_SOUNDS.find((s) => s.letter === letter)!;
+
+/** Words gameplay may deal: everything whose letters AND recording exist.
+ *  Sets 3-4 words join when their sounds and clips land. */
+export const PLAYABLE_WORDS = [...SET_ONE_WORDS, ...SET_TWO_WORDS];
 
 export type Round =
   | { kind: 'sound'; target: Sound; choices: Sound[] }
@@ -93,10 +146,16 @@ export function buildSession(roundCount = 6): Round[] {
   const rounds: Round[] = [];
   const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5);
 
-  const letterDeck = shuffle(SET_ONE);
+  // Deal sounds from every letter with a recording - all 12 today, the rest
+  // of the alphabet as soon as those clips land.
+  const letterDeck = shuffle(PLAYABLE_SOUNDS);
   const wordDeck = [
-    ...shuffle(SET_ONE_WORDS.filter((w) => !lastSessionWords.includes(w))),
-    ...shuffle(lastSessionWords),
+    ...shuffle(PLAYABLE_WORDS.filter((w) => !lastSessionWords.includes(w))),
+    ...shuffle(lastSessionWords.filter((w) => PLAYABLE_WORDS.includes(w))),
+  ];
+  const blendDeck = [
+    ...shuffle(BLEND_WORDS.filter((w) => !lastSessionWords.includes(w))),
+    ...shuffle(BLEND_WORDS.filter((w) => lastSessionWords.includes(w))),
   ];
 
   const usedWords: string[] = [];
@@ -104,14 +163,19 @@ export function buildSession(roundCount = 6): Round[] {
     // Alternate, starting with sounds so he warms up before blending.
     if (i % 2 === 0) {
       const target = letterDeck[(i / 2) % letterDeck.length];
-      const distractors = shuffle(SET_ONE.filter((s) => s.letter !== target.letter)).slice(0, 2);
+      const distractors = shuffle(PLAYABLE_SOUNDS.filter((s) => s.letter !== target.letter)).slice(0, 2);
       rounds.push({
         kind: 'sound',
         target,
         choices: shuffle([target, ...distractors]),
       });
     } else {
-      const word = wordDeck[usedWords.length % wordDeck.length];
+      // The last word of every session is a four-letter blend - the stretch
+      // round, after two three-letter warmups.
+      const isFinale = i === roundCount - 1;
+      const word = isFinale
+        ? blendDeck[0]
+        : wordDeck[usedWords.length % wordDeck.length];
       usedWords.push(word);
       rounds.push({ kind: 'word', word });
     }

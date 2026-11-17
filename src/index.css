@@ -533,6 +533,31 @@ button {
   background: transparent;
 }
 
+/* A basket of ten, for skip-counting */
+.basket {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 64px;
+  height: 68px;
+  border-radius: 14px;
+  background: #fff;
+  border: 2px solid var(--cream-deep);
+  box-shadow: 0 4px 0 var(--cream-deep);
+  transition: transform .15s, opacity .15s;
+}
+.basket:active { transform: scale(.9); }
+.basket__fruit { font-size: 1.5rem; line-height: 1; }
+.basket__fruit svg { width: 26px; height: 28px; }
+.basket__ten {
+  font-size: .95rem;
+  font-weight: bold;
+  color: var(--accent);
+  line-height: 1;
+}
+
 /* An eaten banana comes back as its peel: flopped over, drooping */
 .berry--peel {
   pointer-events: none;

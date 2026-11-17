@@ -5,7 +5,10 @@
 // trails at the end as a bonus. A recording session can stop at any point and
 // what's already done is immediately live.
 
-import { SET_ONE, SET_TWO, SET_ONE_WORDS, SET_TWO_WORDS, BLEND_WORDS } from './curriculum';
+import {
+  SET_ONE, SET_TWO, SET_THREE, SET_FOUR,
+  SET_ONE_WORDS, SET_TWO_WORDS, SET_THREE_WORDS, SET_FOUR_WORDS, BLEND_WORDS,
+} from './curriculum';
 
 export type Clip = {
   id: string;
@@ -335,6 +338,33 @@ for (const [a, b] of ADDITION_COMBOS) {
     group: 'Math sentences',
     essential: false,
   });
+}
+
+// Sets 3 and 4: the rest of the alphabet, plus their word pools. Sound cards
+// carry the held-vs-burst coaching like Sets 1-2.
+for (const [set, sounds] of [['Set 3', SET_THREE], ['Set 4', SET_FOUR]] as const) {
+  for (const s of sounds) {
+    CLIPS.push({
+      id: `phoneme:${s.letter}`,
+      label: s.letter,
+      direction: s.continuant
+        ? `The sound in "${s.keyword}". HOLD IT for a full second, steady and even — this one stretches while he drags.`
+        : `The sound in "${s.keyword}". One short burst — no "uh" on the end. This one can't be stretched.`,
+      group: `Sounds — ${set}`,
+      essential: false,
+    });
+  }
+}
+for (const [set, words] of [['Set 3', SET_THREE_WORDS], ['Set 4', SET_FOUR_WORDS]] as const) {
+  for (const w of words) {
+    CLIPS.push({
+      id: `word:${w}`,
+      label: w,
+      direction: 'The whole word, normal speed, warm. Say it the way you would to him.',
+      group: `Words — ${set}`,
+      essential: false,
+    });
+  }
 }
 
 // Phase 3a: the four-letter blend and plural words.

@@ -400,25 +400,29 @@ const pickOne = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 type EndGame =
   | { kind: 'count'; total: number }
   | { kind: 'takeaway'; start: number; remove: number }
-  | { kind: 'addition'; a: number; b: number };
+  | { kind: 'addition'; a: number; b: number }
+  | { kind: 'tens'; baskets: number };
 
 function rollEndGame(): EndGame {
-  const kind = pickOne(['count', 'takeaway', 'addition'] as const);
+  const kind = pickOne(['count', 'takeaway', 'addition', 'tens'] as const);
   if (kind === 'count') return { kind, total: rand(3, 15) };
   if (kind === 'takeaway') {
     const start = rand(3, 10);
     return { kind, start, remove: rand(1, start - 1) };
   }
+  if (kind === 'tens') return { kind, baskets: rand(2, 10) };
   const a = rand(1, 9);
   return { kind, a, b: rand(1, 10 - a) };
 }
 
-/** Three digit choices: the answer plus two near-misses. */
-function digitChoices(answer: number): number[] {
+/** Three digit choices: the answer plus two near-misses. Tens games pick in
+ *  steps of ten (30/40/50), everything else in ones. */
+function digitChoices(answer: number, step = 1): number[] {
+  const lo = step, hi = step === 1 ? 15 : 100;
   const opts = new Set<number>([answer]);
   while (opts.size < 3) {
-    const d = answer + rand(-3, 3);
-    if (d >= 1 && d <= 15) opts.add(d);
+    const d = answer + rand(-3, 3) * step;
+    if (d >= lo && d <= hi) opts.add(d);
   }
   return [...opts].sort(() => Math.random() - 0.5);
 }
@@ -437,10 +441,12 @@ function DoneScreen({
   const totalBerries =
     game.kind === 'count' ? game.total
     : game.kind === 'takeaway' ? game.start
+    : game.kind === 'tens' ? game.baskets
     : game.a + game.b;
   const answer =
     game.kind === 'count' ? game.total
     : game.kind === 'takeaway' ? game.start - game.remove
+    : game.kind === 'tens' ? game.baskets * 10
     : game.a + game.b;
 
   const [bearMood, setBearMood] = useState<Mood>('sleep');
@@ -518,10 +524,20 @@ function DoneScreen({
     chewing.current = true;
     const n = eaten.filter(Boolean).length + 1;
     setEaten((e) => e.map((v, j) => (j === i ? true : v)));
-    setFlash(n);
+    // A basket is worth ten, so its tap flashes and says TEN! TWENTY!…
+    const spoken = game.kind === 'tens' ? n * 10 : n;
+    setFlash(spoken);
     setTimeout(() => setFlash(null), 700);
-    await play(`count:${n}`, () => say(String(n), { rate: 0.9, pitch: 1.1 }), 700);
+    const clip = game.kind === 'tens' ? `count10:${spoken}` : `count:${spoken}`;
+    await play(clip, () => say(String(spoken), { rate: 0.9, pitch: 1.1 }), 800);
     chewing.current = false;
+
+    if (game.kind === 'tens' && n === totalBerries) {
+      await askHowMany();
+      setChoices(digitChoices(answer, 10));
+      setStage('quiz');
+      return;
+    }
 
     if (game.kind === 'count' && n === totalBerries) {
       await askHowMany();
@@ -555,7 +571,11 @@ function DoneScreen({
     if (stage !== 'quiz' || chewing.current) return;
     if (d === answer) {
       chewing.current = true;
-      await play(`count:${answer}`, () => say(String(answer), { rate: 0.9 }), 800);
+      await play(
+        game.kind === 'tens' ? `count10:${answer}` : `count:${answer}`,
+        () => say(String(answer), { rate: 0.9 }),
+        800,
+      );
       if (game.kind === 'addition') {
         // Chris's design: the right answer earns the eating. Pop and count
         // every berry, then the equation gets said back whole.
@@ -580,8 +600,13 @@ function DoneScreen({
     await play('phrase:try-again', () => say('Try again.', { rate: 0.85 }), 800);
     if (misses.current >= 2) {
       // The hint re-teaches: count the whole set together, then re-ask.
-      for (let k = 1; k <= answer; k++) {
-        await play(`count:${k}`, () => say(String(k), { rate: 0.9 }), 650);
+      const step = game.kind === 'tens' ? 10 : 1;
+      for (let k = step; k <= answer; k += step) {
+        await play(
+          step === 10 ? `count10:${k}` : `count:${k}`,
+          () => say(String(k), { rate: 0.9 }),
+          650,
+        );
         await wait(120);
       }
       await askHowMany();
@@ -616,6 +641,7 @@ function DoneScreen({
         game.kind === 'takeaway'
           ? `Pop ${game.remove} ${game.remove === 1 ? fruit.one : fruit.name}!`
         : game.kind === 'addition' ? 'Touch them to eat them! Count!'
+        : game.kind === 'tens' ? 'Each basket has TEN! Count by tens!'
         : `Feed him! Count the ${fruit.name}!`)
     : stage === 'quiz' ? 'How many did we get?'
     : stage === 'full' ? 'All better! What a good helper.'
@@ -640,6 +666,20 @@ function DoneScreen({
     </button>
   );
 
+  /** A basket of ten: the fruit plus a big 10 badge, so "each basket is ten"
+   *  is visible, not just asserted. */
+  const basketBtn = (i: number, isEaten: boolean) => (
+    <button
+      key={i}
+      className={`basket ${isEaten ? (stage === 'eating' ? 'berry--eaten' : 'berry--popped') : ''}`}
+      onClick={() => eat(i)}
+      aria-label="basket of ten"
+    >
+      <span className="basket__fruit">{fruit.render()}</span>
+      <span className="basket__ten">10</span>
+    </button>
+  );
+
   return (
     <div className="screen screen--done">
       <div className="stars">⭐️⭐️⭐️</div>
@@ -654,6 +694,8 @@ function DoneScreen({
           // '?' only while unsolved; once he answers, the equation stands
           // complete through the eating and the celebration.
           ? `${game.a} + ${game.b} = ${stage === 'quiz' ? '?' : answer}`
+        : stage !== 'offer' && game.kind === 'tens'
+          ? `${game.baskets} baskets of 10${stage === 'quiz' ? ' = ?' : ` = ${answer}`}`
           : `You read ${words} ${words === 1 ? 'word' : 'words'}!`}
       </h2>
       <p className="prompt">{promptText}</p>
@@ -677,7 +719,9 @@ function DoneScreen({
           </div>
         ) : (
           <div className="berries berries--wrap">
-            {eaten.map((isEaten, i) => berryBtn(i, isEaten))}
+            {eaten.map((isEaten, i) =>
+              game.kind === 'tens' ? basketBtn(i, isEaten) : berryBtn(i, isEaten),
+            )}
           </div>
         )
       )}
