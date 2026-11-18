@@ -106,6 +106,11 @@ function schedule() {
     const next = queue.shift();
     if (next) {
       const buf = await getBuffer(next.id);
+      // A suspended context swallows whatever is scheduled into it - the
+      // classic lost-first-letter. Wake the speakers BEFORE playing.
+      if (ac().state !== 'running') {
+        try { await ac().resume(); } catch { /* keep going */ }
+      }
       // Only the letter the finger is still resting on gets held - anything
       // it already swept past plays once, briefly, like real sounding-out.
       if (buf) playNow(next.id, buf, next.hold && queue.length === 0 && !lifted);
@@ -138,19 +143,15 @@ function releaseNow() {
  * Returns false if there's no recording yet, so the caller can fall back.
  */
 export async function startPhoneme(id: string, hold: boolean): Promise<boolean> {
-  const buf = await getBuffer(id);
-  if (!buf) return false;
   lifted = false;
-
-  if (ac().currentTime >= currentUntil && queue.length === 0) {
-    playNow(id, buf, hold);
-  } else {
-    // A wiggling finger can flap between two letters; don't stack repeats.
-    if (queue[queue.length - 1]?.id !== id) queue.push({ id, hold });
-    if (queue.length > 8) queue.shift();
-    if (!pendingTimer) schedule();
-  }
-  return true;
+  // Everything goes through the queue - even an immediately-playable letter.
+  // Playing directly here raced the queue when buffers loaded at different
+  // speeds, and the FIRST letter of a word could lose to the second.
+  if (queue[queue.length - 1]?.id !== id) queue.push({ id, hold });
+  if (queue.length > 8) queue.shift();
+  if (!pendingTimer) schedule();
+  // The caller still needs to know whether a recording exists at all.
+  return (await getBuffer(id)) !== null;
 }
 
 /** The finger lifted. Whatever is sounding (or queued) still gets its minimum
