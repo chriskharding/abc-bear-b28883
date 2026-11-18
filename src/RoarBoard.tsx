@@ -57,13 +57,19 @@ export function RoarBoard({
     ...(bearIds.length
       ? [{ key: 'bear', emoji: '🐻', label: 'Bear', ids: bearIds, empty: false }]
       : []),
-    ...ROAR_SLOTS.map((s) => ({
-      key: s.id,
-      emoji: s.emoji,
-      label: s.label,
-      ids: [s.id],
-      empty: !pool.includes(s.id),
-    })),
+    ...ROAR_SLOTS.map((s) => {
+      // "My Roar" plays any of the kid's takes, like the Bear card does.
+      const ids = s.id === 'sfx:roar:kid'
+        ? pool.filter((id) => id.startsWith('sfx:roar:kid'))
+        : pool.includes(s.id) ? [s.id] : [];
+      return {
+        key: s.id,
+        emoji: s.emoji,
+        label: s.label,
+        ids: ids.length ? ids : [s.id],
+        empty: ids.length === 0,
+      };
+    }),
     ...pool
       .filter((id) => id.startsWith('sfx:roar:extra:'))
       .map((id) => ({

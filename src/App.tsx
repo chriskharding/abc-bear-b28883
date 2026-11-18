@@ -42,15 +42,16 @@ async function play(id: string, fallback: () => void, fallbackMs = 700) {
 let lastRoar: string | null = null;
 
 async function playRoar() {
-  const kid = 'sfx:roar:kid';
   const pool = await listRoarIds();
-  // Never the same roar twice in a row, and Charlie's own stays favored
+  // Never the same roar twice in a row, and Charlie's own takes stay favored
   // without dominating - variety IS the reward staying a reward.
   const fresh = pool.filter((id) => id !== lastRoar);
   const candidates = fresh.length ? fresh : pool;
-  const others = candidates.filter((id) => id !== kid).sort(() => Math.random() - 0.5);
-  const pickKid = candidates.includes(kid) && Math.random() < 0.35;
-  const order = pickKid ? [kid, ...others] : [...others, kid];
+  const isKid = (id: string) => id.startsWith('sfx:roar:kid');
+  const kidIds = candidates.filter(isKid).sort(() => Math.random() - 0.5);
+  const others = candidates.filter((id) => !isKid(id)).sort(() => Math.random() - 0.5);
+  const pickKid = kidIds.length > 0 && Math.random() < 0.35;
+  const order = pickKid ? [...kidIds, ...others] : [...others, ...kidIds];
   for (const id of order) {
     if (await playClip(id)) {
       lastRoar = id;

@@ -27,7 +27,10 @@ export type Clip = {
  *  it's recorded. Beyond these, any number of guest roars can exist as
  *  sfx:roar:extra:N - mommy bear, grandma bear, friends - and the player
  *  discovers them at runtime (see listRoarIds in audioBank). */
-export const ROAR_IDS = ['sfx:roar:1', 'sfx:roar:2', 'sfx:roar:3', 'sfx:roar:kid'];
+export const ROAR_IDS = [
+  'sfx:roar:1', 'sfx:roar:2', 'sfx:roar:3',
+  'sfx:roar:kid', 'sfx:roar:kid2', 'sfx:roar:kid3', 'sfx:roar:kid4', 'sfx:roar:kid5',
+];
 
 /** The roar collection - named slots that make the soundboard a collector's
  *  album. Filled slots are buttons; empty ones are gray "?" cards begging to
@@ -121,6 +124,13 @@ export const CLIPS: Clip[] = [
     group: 'Bear',
     essential: false,
   },
+  ...[2, 3, 4, 5].map((n) => ({
+    id: `sfx:roar:kid${n}`,
+    label: `ROAR  (the kid's, take ${n})`,
+    direction: 'Another one from the kid - make each different: big, tiny, growly, silly.',
+    group: 'Bear',
+    essential: false,
+  })),
   {
     id: 'sfx:grumble',
     label: 'hmmm?',
