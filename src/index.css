@@ -281,6 +281,13 @@ button {
 .blend--mini .blend__cell--next { outline-width: 3px; }
 .blend--mini .blend__hint { display: none; }
 .blend--mini-done { opacity: .75; }
+.blend--mini { display: flex; align-items: flex-end; gap: 3px; }
+.book__punct {
+  font-family: var(--letter-font);
+  font-size: 1.9rem;
+  color: var(--brown);
+  padding-bottom: 10px;
+}
 /* Words waiting their turn - visible so the sentence reads ahead, but
    clearly not yet active */
 .blend--mini-waiting { opacity: .4; pointer-events: none; }

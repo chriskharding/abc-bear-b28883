@@ -150,6 +150,10 @@ export function BookReader({
           <div className="book__line">
             {words.map((w, i) => {
               const c = clean(w);
+              // Keep what print looks like: capitals on the tiles, and the
+              // punctuation standing after the word.
+              const disp = w.replace(/[^A-Za-z']/g, '');
+              const punct = (w.match(/[^A-Za-z']+$/) ?? [''])[0];
               const isDone = done.has(i);
               const sight = TRICKY_WORDS.includes(c);
               // Reading goes left to right at the word level too: only the
@@ -167,10 +171,12 @@ export function BookReader({
                 >
                   <BlendStrip
                     word={c}
+                    display={disp}
                     silent={sight}
                     disabled={!isCurrent}
                     onComplete={() => wordFinished(i)}
                   />
+                  {punct && <span className="book__punct">{punct}</span>}
                 </div>
               );
             })}

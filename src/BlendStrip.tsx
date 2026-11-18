@@ -11,7 +11,7 @@ import { recordWordMiss } from './stats';
 import { say } from './audio';
 
 export function BlendStrip({
-  word, disabled, onComplete, silent = false,
+  word, disabled, onComplete, silent = false, display,
 }: {
   word: string;
   disabled: boolean;
@@ -20,6 +20,9 @@ export function BlendStrip({
    *  - tricky words aren't letter-decodable, and sounding "is" as ih-sss
    *  would teach the wrong thing. The whole word speaks on completion. */
   silent?: boolean;
+  /** What the tiles SHOW (keeps capitals: "The" renders T-h-e). Audio always
+   *  uses the lowercase `word`. */
+  display?: string;
 }) {
   const letters = word.split('');
   const stripRef = useRef<HTMLDivElement | null>(null);
@@ -171,7 +174,7 @@ export function BlendStrip({
               i === progress && !dragging ? 'blend__cell--next' : '',
             ].join(' ')}
           >
-            {l}
+            {(display ?? word)[i] ?? l}
           </div>
         ))}
       </div>
