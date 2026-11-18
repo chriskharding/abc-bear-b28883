@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CLIPS, ESSENTIAL_COUNT, extraRoarClip, type Clip } from './clips';
 import {
-  putClip, deleteClip, recordedIds, playClip, forget, exportIds, exportAllZip, hasClip, listRoarIds,
+  putClip, getClip, deleteClip, recordedIds, playClip, forget, exportIds, exportAllZip, hasClip, listRoarIds,
 } from './audioBank';
 import { trimSilence, peakOf } from './trim';
 
@@ -81,9 +81,22 @@ export function Recorder({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     let alive = true;
     (async () => {
+      // Purge ghost takes: a "recording" under a kilobyte is an accidental
+      // instant stop (pure silence) - delete it so its card correctly shows
+      // as still needed instead of hiding behind nothing.
       const ids = await recordedIds();
+      const good = new Set<string>();
+      for (const id of ids) {
+        const blob = await getClip(id);
+        if (blob && blob.size >= 1000) {
+          good.add(id);
+        } else {
+          await deleteClip(id);
+          forget(id);
+        }
+      }
       if (!alive) return;
-      setDone(new Set(ids));
+      setDone(good);
 
       const roars = await listRoarIds();
       const extraNs = roars
