@@ -91,7 +91,7 @@ export function BookReader({
       setPageDone(true);
       if (seq.current !== my) return;
       setMood('think');
-      await playClip(pageClipId(book.id, page));
+      await playClip(pageClipId(book.id, page, book.pages[page].text));
       setMood('calm');
     }
   };
@@ -100,7 +100,7 @@ export function BookReader({
   const readPage = async () => {
     const my = ++seq.current;
     setMood('think');
-    if (!(await playClip(pageClipId(book.id, page)))) {
+    if (!(await playClip(pageClipId(book.id, page, book.pages[page].text)))) {
       for (const w of words) {
         if (seq.current !== my) return;
         await playClip(wordId(w));

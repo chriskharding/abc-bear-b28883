@@ -58,6 +58,14 @@ export const BOOKS: Book[] = [
  *  sentence. Recorded as ordinary word clips. */
 export const TRICKY_WORDS = ['the', 'a', 'i', 'is', 'to', 'we', 'go', 'no', 'my', 'see', 'has'];
 
-export const pageClipId = (bookId: string, pageIndex: number) =>
-  `book:${bookId}:p${pageIndex + 1}`;
+/** Tiny text fingerprint, so a rewritten sentence gets a NEW clip id and an
+ *  old recording can never masquerade as the new words. */
+const fp = (s: string) => {
+  let x = 5381;
+  for (const ch of s) x = ((x * 33) ^ (ch.codePointAt(0) ?? 0)) >>> 0;
+  return x.toString(36).slice(0, 5);
+};
+
+export const pageClipId = (bookId: string, pageIndex: number, text: string) =>
+  `book:${bookId}:p${pageIndex + 1}:${fp(text)}`;
 export const titleClipId = (bookId: string) => `book:${bookId}:title`;

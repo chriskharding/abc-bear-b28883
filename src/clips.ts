@@ -401,7 +401,7 @@ for (const b of BOOKS) {
   });
   b.pages.forEach((p, i) => {
     CLIPS.push({
-      id: pageClipId(b.id, i),
+      id: pageClipId(b.id, i, p.text),
       label: p.text,
       direction: 'Read the whole sentence naturally - storytime voice, unhurried.',
       group: `Book: ${b.title}`,
