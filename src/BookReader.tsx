@@ -81,7 +81,10 @@ export function BookReader({
   const wordFinished = async (idx: number) => {
     if (idx !== done.size) return; // order is the rule
     const my = ++seq.current;
-    await playClip(wordId(words[idx]));
+    // Sight words already said themselves when the slide began.
+    if (!TRICKY_WORDS.includes(clean(words[idx]))) {
+      await playClip(wordId(words[idx]));
+    }
     const next = new Set(done).add(idx);
     setDone(next);
     if (next.size === words.length && !pageDone) {

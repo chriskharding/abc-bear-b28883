@@ -102,6 +102,9 @@ export function BlendStrip({
   const onDown = (e: React.PointerEvent) => {
     if (disabled) return;
     wakeSustain();
+    // A sight word says itself as the slide begins - shape and sound
+    // together, since its letters don't spell its sound.
+    if (silent) void playClip(`word:${word}`);
     // Capture keeps the drag alive if his finger strays off the strip. It
     // throws on an already-released pointer, and losing capture is far less
     // bad than losing the whole gesture.
