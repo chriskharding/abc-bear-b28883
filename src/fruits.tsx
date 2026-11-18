@@ -8,7 +8,23 @@ export type Fruit = {
   name: string;
   one: string;
   render: () => ReactNode;
+  /** What's left after eating, when the fruit deserves better than the
+   *  generic squashed look (bananas leave a peel). */
+  renderEaten?: () => ReactNode;
 };
+
+/** The classic splayed banana peel. */
+function BananaPeel() {
+  return (
+    <svg width="38" height="40" viewBox="0 0 40 42" aria-hidden="true">
+      <ellipse cx="20" cy="18" rx="7" ry="5" fill="#F7EBC8" />
+      <path d="M20 16 q-3 -8 -1 -12 q3 -1 4 1 q2 5 -1 11 z" fill="#8a6a2f" />
+      <path d="M17 18 q-12 2 -14 18 q7 -1 10 -8 q2 -6 4 -10 z" fill="#F5D14A" />
+      <path d="M23 18 q12 2 14 18 q-7 -1 -10 -8 q-2 -6 -4 -10 z" fill="#F5D14A" />
+      <path d="M20 20 q-1 12 0 18 q4 -4 4 -12 q0 -4 -4 -6 z" fill="#EFC53F" />
+    </svg>
+  );
+}
 
 function BerryCluster({ body, shine }: { body: string; shine: string }) {
   // Drupelets packed into a rounded berry shape, leaf on top.
@@ -33,7 +49,7 @@ function BerryCluster({ body, shine }: { body: string; shine: string }) {
 
 export const FRUITS: Fruit[] = [
   { name: 'blueberries', one: 'blueberry', render: () => '🫐' },
-  { name: 'bananas', one: 'banana', render: () => '🍌' },
+  { name: 'bananas', one: 'banana', render: () => '🍌', renderEaten: () => <BananaPeel /> },
   {
     name: 'raspberries',
     one: 'raspberry',

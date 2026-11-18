@@ -697,20 +697,26 @@ function DoneScreen({
    *  during the how-many question and the take-away equation - eaten ones
    *  come back squashed and faded: still countable, clearly eaten. Bananas
    *  come back as peels, per Charlie. */
-  const berryBtn = (i: number, isEaten: boolean) => (
-    <button
-      key={i}
-      className={`berry ${isEaten
-        ? (stage === 'eating' ? 'berry--eaten'
-          : fruit.name === 'bananas' ? 'berry--peel'
-          : 'berry--popped')
-        : ''}`}
-      onClick={() => eat(i)}
-      aria-label={fruit.one}
-    >
-      {fruit.render()}
-    </button>
-  );
+  const berryBtn = (i: number, isEaten: boolean) => {
+    // After the pop-vanish of eating, eaten fruit returns countable: a real
+    // leftover (banana peel) when the fruit has one, the squashed skin look
+    // otherwise.
+    const showLeftover = isEaten && stage !== 'eating' && fruit.renderEaten;
+    return (
+      <button
+        key={i}
+        className={`berry ${isEaten
+          ? (stage === 'eating' ? 'berry--eaten'
+            : showLeftover ? 'berry--leftover'
+            : 'berry--popped')
+          : ''}`}
+        onClick={() => eat(i)}
+        aria-label={fruit.one}
+      >
+        {showLeftover ? fruit.renderEaten!() : fruit.render()}
+      </button>
+    );
+  };
 
   /** A basket of ten: the fruit plus a big 10 badge, so "each basket is ten"
    *  is visible, not just asserted. */

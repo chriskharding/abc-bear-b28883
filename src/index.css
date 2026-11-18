@@ -703,12 +703,10 @@ button {
   line-height: 1;
 }
 
-/* An eaten banana comes back as its peel: flopped over, drooping */
-.berry--peel {
+/* An eaten fruit that leaves a real leftover (the banana peel) */
+.berry--leftover {
   pointer-events: none;
-  opacity: .55;
-  transform: rotate(150deg) scaleY(.65);
-  filter: saturate(.6);
+  opacity: .85;
   box-shadow: none;
   background: transparent;
 }
