@@ -4,7 +4,7 @@
 // drag, and they run together into the word.
 
 import { useEffect, useRef, useState } from 'react';
-import { soundFor } from './curriculum';
+import { soundFor, graphemes, phonemeClipFor } from './curriculum';
 import { startPhoneme, stopPhoneme, preload, wakeSustain } from './sustain';
 import { playClip } from './audioBank';
 import { recordWordMiss } from './stats';
@@ -24,7 +24,19 @@ export function BlendStrip({
    *  uses the lowercase `word`. */
   display?: string;
 }) {
-  const letters = word.split('');
+  // Sound-tiles, not characters: "ship" is sh·i·p, "duck" is d·u·ck. The
+  // display split mirrors the audio split so capitals survive (Sh·i·p).
+  const letters = graphemes(word);
+  const dispTiles = (() => {
+    const src = display ?? word;
+    const out: string[] = [];
+    let at = 0;
+    for (const g of letters) {
+      out.push(src.slice(at, at + g.length) || g);
+      at += g.length;
+    }
+    return out;
+  })();
   const stripRef = useRef<HTMLDivElement | null>(null);
   const cellRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -42,7 +54,7 @@ export function BlendStrip({
   const touched = useRef(false);
 
   useEffect(() => {
-    preload(letters.map((l) => `phoneme:${l}`));
+    preload(letters.map(phonemeClipFor));
     return () => stopPhoneme();
   }, [word]);
 
@@ -81,7 +93,7 @@ export function BlendStrip({
 
     if (!silent) {
       const sound = soundFor(letters[i]);
-      const ok = await startPhoneme(`phoneme:${letters[i]}`, sound.continuant);
+      const ok = await startPhoneme(phonemeClipFor(letters[i]), sound.continuant);
       if (!ok) say(sound.say, { rate: 0.6 }); // nothing recorded yet
     }
   };
@@ -179,9 +191,10 @@ export function BlendStrip({
               i < progress ? 'blend__cell--done' : '',
               i === active ? 'blend__cell--active' : '',
               i === progress && !dragging ? 'blend__cell--next' : '',
+              l.length > 1 ? 'blend__cell--team' : '',
             ].join(' ')}
           >
-            {(display ?? word)[i] ?? l}
+            {dispTiles[i]}
           </div>
         ))}
       </div>

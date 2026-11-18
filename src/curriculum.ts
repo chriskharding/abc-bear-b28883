@@ -72,9 +72,43 @@ export const DIGRAPH_SOUNDS: Sound[] = [
   { letter: 'qu', say: 'kw', keyword: 'queen', continuant: false },
 ];
 
+/** ck is a spelling of the k sound, not a sound of its own - it gets a tile
+ *  but never a sound-round card, and its audio is the k clip. */
+export const CK_SOUND: Sound = { letter: 'ck', say: 'k', keyword: 'duck', continuant: false };
+
 /** The sounds gameplay may deal. Full alphabet since 2026-11-17 - every
  *  letter has a recording, and the pairs play too. */
 export const PLAYABLE_SOUNDS = [...ALL_SOUNDS, ...DIGRAPH_SOUNDS];
+
+/** Split a word into sound-tiles: two-letter teams stay together, so "ship"
+ *  is sh·i·p and "duck" is d·u·ck. Greedy left-to-right is correct for every
+ *  word in the app's pools. */
+const TEAMS = ['sh', 'ch', 'th', 'ng', 'qu', 'ck'];
+export function graphemes(word: string): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while (i < word.length) {
+    const two = word.slice(i, i + 2).toLowerCase();
+    if (TEAMS.includes(two)) {
+      out.push(word.slice(i, i + 2));
+      i += 2;
+    } else {
+      out.push(word[i]);
+      i += 1;
+    }
+  }
+  return out;
+}
+
+/** The words the recorded digraph bank covers - all three sound-tiles each,
+ *  so they sit at the same difficulty as the CVC words. */
+export const DIGRAPH_WORDS = [
+  'ship', 'shop', 'shut', 'shed', 'fish', 'dish', 'wish', 'rush', 'mash', 'cash',
+  'chip', 'chat', 'chin', 'chop', 'much', 'such', 'rich',
+  'thin', 'thud', 'moth', 'bath', 'path',
+  'duck', 'sock', 'kick', 'pack', 'neck', 'rock', 'lick', 'lock', 'sick', 'pick',
+  'ring', 'king', 'song', 'long', 'sing', 'wing', 'hang', 'bang',
+];
 
 /** Every word buildable from Set 1. All decodable - nothing here has to be
  *  memorised, he can sound out all of it. */
@@ -155,12 +189,17 @@ export const BLEND_WORDS = [
 ];
 
 export const soundFor = (letter: string): Sound =>
-  [...ALL_SOUNDS, ...DIGRAPH_SOUNDS].find((s) => s.letter === letter)!;
+  [...ALL_SOUNDS, ...DIGRAPH_SOUNDS, CK_SOUND].find((s) => s.letter === letter.toLowerCase())!;
+
+/** Which recording speaks this tile (ck borrows k's sound). */
+export const phonemeClipFor = (tile: string) =>
+  `phoneme:${tile.toLowerCase() === 'ck' ? 'k' : tile.toLowerCase()}`;
 
 /** Words gameplay may deal: everything whose letters AND recording exist.
  *  Sets 3-4 words join when their sounds and clips land. */
 export const PLAYABLE_WORDS = [
   ...SET_ONE_WORDS, ...SET_TWO_WORDS, ...SET_THREE_WORDS, ...SET_FOUR_WORDS,
+  ...DIGRAPH_WORDS,
 ];
 
 /** Four-letter finale pool: the original blends plus the book bank. */
