@@ -50,6 +50,7 @@ export const FRUITS: Fruit[] = [
   { name: 'grapes', one: 'grape', render: () => '🍇' },
   { name: 'cherries', one: 'cherry', render: () => '🍒' },
   { name: 'watermelons', one: 'watermelon', render: () => '🍉' },
+  { name: 'broccoli', one: 'broccoli', render: () => '🥦' },
 ];
 
 /** Plural + singular name pairs, for generating per-fruit voice lines. */
