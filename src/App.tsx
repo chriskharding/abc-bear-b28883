@@ -218,6 +218,16 @@ export default function App() {
         />
       )}
 
+      {phase === 'play' && round?.kind === 'sight' && (
+        <SightRound
+          key={index}
+          round={round}
+          mood={mood}
+          locked={locked}
+          onRight={() => celebrate(advance)}
+        />
+      )}
+
       {phase === 'play' && round?.kind === 'word' && (
         <WordRound
           key={index}
@@ -368,6 +378,77 @@ function SoundRound({
             onClick={() => choose(c.letter)}
           >
             {c.letter}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Sight-word round: same shape as the sound game, but the cards are whole
+ *  words - the/is/we - picked out by how they LOOK. */
+function SightRound({
+  round, mood, locked, onRight,
+}: {
+  round: Extract<Round, { kind: 'sight' }>;
+  mood: Mood;
+  locked: boolean;
+  onRight: () => void;
+}) {
+  const [wrong, setWrong] = useState<string | null>(null);
+  const misses = useRef(0);
+  const target = round.target;
+
+  const playPrompt = useCallback(() => {
+    void playClip(`word:${target}`);
+  }, [target]);
+
+  const lockedRef2 = useRef(locked);
+  lockedRef2.current = locked;
+  useEffect(() => {
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      if (lockedRef2.current) return;
+      await play('phrase:which-one', () => say('Touch the one that says...', { rate: 0.85 }), 1200);
+      if (!cancelled && !lockedRef2.current) playPrompt();
+    }, 400);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [playPrompt]);
+
+  const choose = (w: string) => {
+    if (locked) return;
+    if (w === target) {
+      onRight();
+    } else {
+      setWrong(w);
+      misses.current += 1;
+      void (async () => {
+        await play('sfx:grumble', grumble, 500);
+        if (misses.current >= 2) {
+          await play('phrase:try-again', () => say('Try again.', { rate: 0.85 }), 800);
+          playPrompt();
+        }
+      })();
+      setTimeout(() => setWrong(null), 500);
+    }
+  };
+
+  return (
+    <div className="screen">
+      <Bear mood={mood} size={170} />
+      <button className="hear-btn" onClick={playPrompt} aria-label="hear the word again">
+        🔊
+        <span className="hear-btn__badge" aria-hidden="true">↻</span>
+      </button>
+      <p className="prompt">Touch the one that says that word.</p>
+      <div className="cards">
+        {round.choices.map((w) => (
+          <button
+            key={w}
+            className={`card card--sight ${wrong === w ? 'card--wrong' : ''}`}
+            onClick={() => choose(w)}
+          >
+            {w === 'i' ? 'I' : w}
           </button>
         ))}
       </div>
@@ -557,6 +638,10 @@ function DoneScreen({
         setChoices(digitChoices(answer));
         setStage('quiz');
       } else {
+        if (game.kind === 'tens') {
+          // He gets to be the teacher - Baby Bear needs showing.
+          await playClip('phrase:tens-intro');
+        }
         setStage('eating');
       }
     }, 400);

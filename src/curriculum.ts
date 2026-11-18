@@ -157,11 +157,14 @@ export const PLAYABLE_BLENDS = [...BLEND_WORDS, ...BLEND_WORDS_2];
 
 export type Round =
   | { kind: 'sound'; target: Sound; choices: Sound[] }
-  | { kind: 'word'; word: string };
+  | { kind: 'word'; word: string }
+  | { kind: 'sight'; target: string; choices: string[] };
 
 /** Words used in the previous session, so back-to-back sessions (READ MORE
  *  chains especially) don't serve the same words again. */
 let lastSessionWords: string[] = [];
+
+import { TRICKY_WORDS as SIGHT_WORDS } from './books';
 
 /** Build one short session. Deliberately fixed-length - the session ends,
  *  and that is the point. There is no "one more level".
@@ -187,8 +190,13 @@ export function buildSession(roundCount = 6): Round[] {
 
   const usedWords: string[] = [];
   for (let i = 0; i < roundCount; i++) {
-    // Alternate, starting with sounds so he warms up before blending.
-    if (i % 2 === 0) {
+    // Alternate, starting with sounds so he warms up before blending. The
+    // third "sound" slot becomes a sight-word round - the/is/we picked out
+    // whole, same tap-the-right-one shape as the sound game.
+    if (i === 4) {
+      const deck = shuffle(SIGHT_WORDS);
+      rounds.push({ kind: 'sight', target: deck[0], choices: shuffle(deck.slice(0, 3)) });
+    } else if (i % 2 === 0) {
       const target = letterDeck[(i / 2) % letterDeck.length];
       const distractors = shuffle(PLAYABLE_SOUNDS.filter((s) => s.letter !== target.letter)).slice(0, 2);
       rounds.push({

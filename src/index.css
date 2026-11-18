@@ -189,6 +189,15 @@ button {
 }
 .card:active { transform: translateY(3px); }
 .card--wrong { animation: shake .4s; }
+/* Sight-word cards: whole words, purple like the book's sight sliders */
+.card--sight {
+  width: auto;
+  min-width: clamp(84px, 26vw, 110px);
+  padding: 0 18px;
+  font-size: clamp(2rem, 9vw, 2.8rem);
+  color: #6B4FA0;
+  background: #F8F3FE;
+}
 
 @keyframes shake {
   0%,100% { transform: translateX(0); }
@@ -253,13 +262,13 @@ button {
 .book__art {
   width: 100%;
   max-width: 480px;
-  height: 40vh;
+  height: 30vh;
   object-fit: cover;
   border-radius: 20px;
   box-shadow: 0 5px 0 var(--cream-deep);
   animation: pop .5s ease-out;
 }
-.book__art--big { height: 54vh; }
+.book__art--big { height: 42vh; }
 
 /* A page is a row of word-sliders and sight chips */
 .book__line {

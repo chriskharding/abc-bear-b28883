@@ -282,6 +282,13 @@ export const CLIPS: Clip[] = [
     essential: true,
   },
   {
+    id: 'phrase:tens-intro',
+    label: 'Can you show Baby Bear how to count by tens?',
+    direction: 'An invitation - Baby Bear needs teaching and HE gets to be the teacher.',
+    group: 'Math',
+    essential: false,
+  },
+  {
     id: 'phrase:eat-them',
     label: 'Great job! Now touch them to eat them!',
     direction: 'Right after he answers the math question — inviting, like dessert is served.',

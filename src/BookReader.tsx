@@ -93,6 +93,11 @@ export function BookReader({
       setMood('think');
       await playClip(pageClipId(book.id, page, book.pages[page].text));
       setMood('calm');
+      // The page turns itself - no button for small hands to hunt for.
+      if (seq.current === my) {
+        await new Promise((r) => setTimeout(r, 900));
+        if (seq.current === my) void turnPage();
+      }
     }
   };
 
@@ -111,7 +116,7 @@ export function BookReader({
     if (seq.current === my) setMood('calm');
   };
 
-  const next = async () => {
+  const turnPage = async () => {
     seq.current++;
     if (page >= book.pages.length - 1) {
       recordBookFinished(book.id);
@@ -134,13 +139,16 @@ export function BookReader({
         <span className="roars__collected">
           {page < 0 ? book.title : `${page + 1} / ${book.pages.length}`}
         </span>
+        <Bear mood={mood} size={56} />
       </div>
 
       {page < 0 ? (
         <>
-          <PageArt file={`${book.id}-cover.jpg`} emoji={book.cover} big />
+          {/* The whole cover is the start button - no hunting. */}
+          <div onClick={turnPage} role="button" aria-label="start reading">
+            <PageArt file={`${book.id}-cover.jpg`} emoji={book.cover} big />
+          </div>
           <h2 className="title title--sm">{book.title}</h2>
-          <Bear mood={mood} size={110} />
         </>
       ) : (
         <>
@@ -189,13 +197,10 @@ export function BookReader({
         </>
       )}
 
-      <button
-        className={`big-btn ${page >= 0 && !pageDone ? 'big-btn--off' : ''}`}
-        onClick={next}
-        disabled={page >= 0 && !pageDone}
-      >
-        {page < 0 ? 'READ!' : page >= book.pages.length - 1 ? 'THE END!' : 'NEXT →'}
-      </button>
+      {/* Pages turn themselves once read; the only button is the cover's. */}
+      {page < 0 && (
+        <button className="big-btn" onClick={turnPage}>READ!</button>
+      )}
     </div>
   );
 }

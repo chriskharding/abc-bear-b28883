@@ -69,17 +69,19 @@ export function BlendStrip({
     }
     touched.current = true;
 
+    // Sound follows the READING, not the finger: only the next-expected
+    // letter speaks. A little finger landing mid-word gets quiet and the
+    // glowing first tile as the cue - never the middle sound first.
+    if (i !== progressRef.current) return;
+
     if (!silent) {
       const sound = soundFor(letters[i]);
       const ok = await startPhoneme(`phoneme:${letters[i]}`, sound.continuant);
       if (!ok) say(sound.say, { rate: 0.6 }); // nothing recorded yet
     }
 
-    // Only forward movement counts, so he can't blend a word backwards.
-    if (i === progressRef.current) {
-      progressRef.current = i + 1;
-      setProgress(i + 1);
-    }
+    progressRef.current = i + 1;
+    setProgress(i + 1);
   };
 
   /** The last letter the finger actually touched. A fast finger LEAPS -
@@ -138,9 +140,10 @@ export function BlendStrip({
     // Made it all the way across - that's the word read.
     if (progressRef.current >= letters.length) {
       onComplete();
-    } else if (touched.current) {
-      // Lifted early, or started somewhere other than the first letter.
-      // Reset to the start and nudge - the orange ring shows where to begin.
+    } else if (touched.current && progressRef.current > 0) {
+      // A real attempt was abandoned mid-word: reset and nudge. (A fumbled
+      // touch that never progressed stays quiet - toddler fingers wander,
+      // and scolding a stray tap teaches nothing.)
       touched.current = false;
       progressRef.current = 0;
       setProgress(0);
@@ -148,6 +151,8 @@ export function BlendStrip({
       void playClip('phrase:try-again').then((ok) => {
         if (!ok) say('Try again.', { rate: 0.85 });
       });
+    } else {
+      touched.current = false;
     }
   };
 
