@@ -73,15 +73,17 @@ export function BlendStrip({
     // letter speaks. A little finger landing mid-word gets quiet and the
     // glowing first tile as the cue - never the middle sound first.
     if (i !== progressRef.current) return;
+    // Claim the slot BEFORE any await: during a fast sweep the next letter's
+    // enter() fires while this one is still loading audio, and checking a
+    // stale progress value made it bail - dead letters mid-word.
+    progressRef.current = i + 1;
+    setProgress(i + 1);
 
     if (!silent) {
       const sound = soundFor(letters[i]);
       const ok = await startPhoneme(`phoneme:${letters[i]}`, sound.continuant);
       if (!ok) say(sound.say, { rate: 0.6 }); // nothing recorded yet
     }
-
-    progressRef.current = i + 1;
-    setProgress(i + 1);
   };
 
   /** The last letter the finger actually touched. A fast finger LEAPS -

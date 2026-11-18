@@ -61,9 +61,20 @@ export const SET_FOUR: Sound[] = [
 
 export const ALL_SOUNDS = [...SET_ONE, ...SET_TWO, ...SET_THREE, ...SET_FOUR];
 
+/** The letter pairs: two letters, one sound. Recorded; they join the sound
+ *  rounds and ABC board as tap-and-hear. (Sliding them inside words needs
+ *  the sound-tile engine - still to come.) */
+export const DIGRAPH_SOUNDS: Sound[] = [
+  { letter: 'sh', say: 'shh', keyword: 'ship', continuant: true },
+  { letter: 'ch', say: 'ch', keyword: 'chip', continuant: false },
+  { letter: 'th', say: 'th', keyword: 'bath', continuant: true },
+  { letter: 'ng', say: 'ng', keyword: 'ring', continuant: true },
+  { letter: 'qu', say: 'kw', keyword: 'queen', continuant: false },
+];
+
 /** The sounds gameplay may deal. Full alphabet since 2026-11-17 - every
- *  letter has a recording. */
-export const PLAYABLE_SOUNDS = ALL_SOUNDS;
+ *  letter has a recording, and the pairs play too. */
+export const PLAYABLE_SOUNDS = [...ALL_SOUNDS, ...DIGRAPH_SOUNDS];
 
 /** Every word buildable from Set 1. All decodable - nothing here has to be
  *  memorised, he can sound out all of it. */
@@ -144,7 +155,7 @@ export const BLEND_WORDS = [
 ];
 
 export const soundFor = (letter: string): Sound =>
-  ALL_SOUNDS.find((s) => s.letter === letter)!;
+  [...ALL_SOUNDS, ...DIGRAPH_SOUNDS].find((s) => s.letter === letter)!;
 
 /** Words gameplay may deal: everything whose letters AND recording exist.
  *  Sets 3-4 words join when their sounds and clips land. */

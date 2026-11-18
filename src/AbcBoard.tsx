@@ -6,7 +6,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Bear, type Mood } from './Bear';
 import { playClip, hasClip } from './audioBank';
 
-const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const LETTERS = [
+  ...'abcdefghijklmnopqrstuvwxyz'.split(''),
+  // The pairs: two letters, one sound.
+  'sh', 'ch', 'th', 'ng', 'qu',
+];
 /** q's sound is recorded as "qu". */
 const clipFor = (letter: string) => (letter === 'q' ? 'phoneme:qu' : `phoneme:${letter}`);
 
