@@ -134,13 +134,13 @@ export function BookReader({
 
       {page < 0 ? (
         <>
-          <PageArt file={`${book.id}-cover.png`} emoji={book.cover} big />
+          <PageArt file={`${book.id}-cover.jpg`} emoji={book.cover} big />
           <h2 className="title title--sm">{book.title}</h2>
           <Bear mood={mood} size={110} />
         </>
       ) : (
         <>
-          <PageArt file={`${book.id}-p${page + 1}.png`} emoji={cur?.pic} />
+          <PageArt file={`${book.id}-p${page + 1}.jpg`} emoji={cur?.pic} />
           {/* He reads the page: sliders for decodable words, sight chips for
               tricky ones. Completing them all earns the storytime read-back. */}
           <div className="book__line">
