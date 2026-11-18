@@ -79,6 +79,7 @@ export function BookReader({
   /** A word slot finished (slid, or sight-chip tapped): say the word, and if
    *  it was the last one, the whole sentence comes back in storytime voice. */
   const wordFinished = async (idx: number) => {
+    if (idx !== done.size) return; // order is the rule
     const my = ++seq.current;
     await playClip(wordId(words[idx]));
     const next = new Set(done).add(idx);
@@ -147,22 +148,24 @@ export function BookReader({
             {words.map((w, i) => {
               const c = clean(w);
               const isDone = done.has(i);
-              if (TRICKY_WORDS.includes(c)) {
-                return (
-                  <button
-                    key={`${page}-${i}`}
-                    className={`sight-chip ${isDone ? 'sight-chip--done' : ''}`}
-                    onClick={() => !isDone && wordFinished(i)}
-                  >
-                    {w}
-                  </button>
-                );
-              }
+              const sight = TRICKY_WORDS.includes(c);
+              // Reading goes left to right at the word level too: only the
+              // next unread word is live, the rest wait their turn dimmed.
+              const isCurrent = i === done.size;
               return (
-                <div key={`${page}-${i}`} className={`blend--mini ${isDone ? 'blend--mini-done' : ''}`}>
+                <div
+                  key={`${page}-${i}`}
+                  className={[
+                    'blend--mini',
+                    sight ? 'blend--sight' : '',
+                    isDone ? 'blend--mini-done' : '',
+                    !isDone && !isCurrent ? 'blend--mini-waiting' : '',
+                  ].join(' ')}
+                >
                   <BlendStrip
                     word={c}
-                    disabled={isDone}
+                    silent={sight}
+                    disabled={!isCurrent}
                     onComplete={() => wordFinished(i)}
                   />
                 </div>

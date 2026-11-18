@@ -11,11 +11,15 @@ import { recordWordMiss } from './stats';
 import { say } from './audio';
 
 export function BlendStrip({
-  word, disabled, onComplete,
+  word, disabled, onComplete, silent = false,
 }: {
   word: string;
   disabled: boolean;
   onComplete: () => void;
+  /** Sight-word mode: the slide works identically, but no letter sounds play
+   *  - tricky words aren't letter-decodable, and sounding "is" as ih-sss
+   *  would teach the wrong thing. The whole word speaks on completion. */
+  silent?: boolean;
 }) {
   const letters = word.split('');
   const stripRef = useRef<HTMLDivElement | null>(null);
@@ -62,9 +66,11 @@ export function BlendStrip({
     }
     touched.current = true;
 
-    const sound = soundFor(letters[i]);
-    const ok = await startPhoneme(`phoneme:${letters[i]}`, sound.continuant);
-    if (!ok) say(sound.say, { rate: 0.6 }); // nothing recorded yet
+    if (!silent) {
+      const sound = soundFor(letters[i]);
+      const ok = await startPhoneme(`phoneme:${letters[i]}`, sound.continuant);
+      if (!ok) say(sound.say, { rate: 0.6 }); // nothing recorded yet
+    }
 
     // Only forward movement counts, so he can't blend a word backwards.
     if (i === progressRef.current) {

@@ -281,6 +281,15 @@ button {
 .blend--mini .blend__cell--next { outline-width: 3px; }
 .blend--mini .blend__hint { display: none; }
 .blend--mini-done { opacity: .75; }
+/* Words waiting their turn - visible so the sentence reads ahead, but
+   clearly not yet active */
+.blend--mini-waiting { opacity: .4; pointer-events: none; }
+
+/* Sight-word sliders: same gesture, purple tiles, silent until the word */
+.blend--sight .blend__cell { color: #B9A6D6; }
+.blend--sight .blend__cell--next { color: #6B4FA0; outline-color: #9B7FD0; }
+.blend--sight .blend__cell--done { color: #6B4FA0; background: #F0E6FA; }
+.blend--sight .blend__cell--active { background: #9B7FD0; color: #fff; }
 
 /* Tricky words: learned whole, so they look whole - a soft pill, no tiles */
 .sight-chip {
