@@ -39,15 +39,23 @@ async function play(id: string, fallback: () => void, fallbackMs = 700) {
  *  reward beats any bear - and everyone else (dad's takes, mommy bear,
  *  guests) splits the rest so nothing turns into wallpaper. Falls through
  *  the list until something plays. */
+let lastRoar: string | null = null;
+
 async function playRoar() {
   const kid = 'sfx:roar:kid';
   const pool = await listRoarIds();
-  const others = pool.filter((id) => id !== kid).sort(() => Math.random() - 0.5);
-  const order = pool.includes(kid) && Math.random() < 0.5
-    ? [kid, ...others]
-    : [...others, kid];
+  // Never the same roar twice in a row, and Charlie's own stays favored
+  // without dominating - variety IS the reward staying a reward.
+  const fresh = pool.filter((id) => id !== lastRoar);
+  const candidates = fresh.length ? fresh : pool;
+  const others = candidates.filter((id) => id !== kid).sort(() => Math.random() - 0.5);
+  const pickKid = candidates.includes(kid) && Math.random() < 0.35;
+  const order = pickKid ? [kid, ...others] : [...others, kid];
   for (const id of order) {
-    if (await playClip(id)) return;
+    if (await playClip(id)) {
+      lastRoar = id;
+      return;
+    }
   }
   roar();
   await wait(1400);
